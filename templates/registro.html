@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Usuario - Sistema Mano Robótica</title>
+</head>
+<body>
+    <h2>Crear Nuevo Usuario</h2>
+    <form id="registroForm">
+        <label>Nombre de Usuario:</label><br>
+        <input type="text" id="usuario" required><br><br>
+
+        <label>Contraseña:</label><br>
+        <input type="password" id="password" required><br><br>
+
+        <label>Tipo de Usuario (Rol):</label><br>
+        <select id="rol">
+            <option value="operador">Usuario Normal (Operador)</option>
+            <option value="admin">Administrador</option>
+        </select><br><br>
+
+        <button type="submit">Guardar Usuario</button>
+    </form>
+
+    <p><a href="/login">Volver al inicio de sesión</a></p>
+
+    <script>
+        document.getElementById('registroForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usuario = document.getElementById('usuario').value;
+            const password = document.getElementById('password').value;
+            const rol = document.getElementById('rol').value;
+
+            const res = await fetch('/registro', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, password, rol })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert('¡Usuario creado con éxito!');
+                window.location.href = '/login';
+            } else {
+                alert('Error al crear usuario: ' + data.message);
+            }
+        });
+    </script>
+</body>
+</html>
