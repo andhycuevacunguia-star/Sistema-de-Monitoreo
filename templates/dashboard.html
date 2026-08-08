@@ -72,7 +72,7 @@
         </div>
     </div>
 
-    <!-- 2. DATOS DE LOS SENSORES (Carga desde Supabase) -->
+    <!-- 2. DATOS DE LOS SENSORES -->
     <div id="datos-sensores" class="tab-content">
         <h3>Lectura de Datos de Sensores</h3>
         <p style="color: var(--text-muted);">Datos en tiempo real sincronizados desde el hardware:</p>
@@ -89,7 +89,7 @@
         {% endif %}
     </div>
 
-    <!-- 3. FALLAS ENCONTRADAS (Carga desde Supabase) -->
+    <!-- 3. FALLAS ENCONTRADAS -->
     <div id="fallas-encontradas" class="tab-content">
         <h3>Diagnóstico y Registro de Fallas</h3>
         <p style="color: var(--text-muted);">Historial de anomalías registradas en el sistema:</p>
@@ -121,14 +121,27 @@
         </table>
     </div>
 
-    <!-- 4A. VIDEOS TUTORIALES (Solo Estudiante/Operador) -->
+    <!-- 4A. VIDEOS TUTORIALES (Dinamico conectado a Supabase) -->
     {% if rol != 'admin' %}
     <div id="videos-tutoriales" class="tab-content">
         <h3>Videos Tutoriales</h3>
         <p style="color: var(--text-muted);">Guías de aprendizaje para el manejo del sistema:</p>
-        <ul style="line-height: 1.8;">
-            <li> <strong>Tutorial 1:</strong> Calibración y control de servomotores</li>
-            <li><strong>Tutorial 2:</strong> Configuración inicial de la cámara ESP32-CAM</li>
+        
+        <ul style="line-height: 1.8; list-style: none; padding: 0;">
+            {% if videos %}
+                {% for video in videos %}
+                    <li style="margin-bottom: 30px; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                        <strong style="color: var(--accent); font-size: 17px;">{{ video.titulo }}</strong>
+                        <br><br>
+                        <video controls width="100%" style="max-width: 600px; border-radius: 6px;">
+                            <source src="{{ video.ruta_video }}" type="video/mp4">
+                            Tu navegador no soporta la reproducción de video.
+                        </video>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li style="color: var(--text-muted); font-style: italic;">No hay videos tutoriales disponibles actualmente.</li>
+            {% endif %}
         </ul>
     </div>
     {% endif %}
@@ -146,7 +159,8 @@
             <button type="submit" style="background-color: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
         </form>
     </div>
-<!-- 5. ELIMINAR USUARIO (Solo Admin) -->
+
+    <!-- 5. ELIMINAR USUARIO (Solo Admin) -->
     <div id="eliminar-usuario" class="tab-content">
         <h3>Gestión y Control de Usuarios</h3>
         <p style="color: var(--text-muted);">Lista general de cuentas registradas en la base de datos:</p>
@@ -168,7 +182,6 @@
                     <td>{{ u.rol }}</td>
                     <td>{{ u.created_at }}</td>
                     <td>
-                        <!-- CAMBIO AQUÍ: Usamos data-id y una clase para el botón -->
                         <button class="btn-delete btn-eliminar" data-id="{{ u.id }}">Eliminar</button>
                     </td>
                 </tr>
@@ -188,7 +201,6 @@
             element.classList.add('active');
         }
 
-        // CAMBIO AQUÍ: Manejamos el evento de eliminación de forma limpia sin mezclar Jinja con JS en el HTML
         document.addEventListener('click', async function(event) {
             if (event.target.classList.contains('btn-eliminar')) {
                 const idUsuario = event.target.getAttribute('data-id');
@@ -206,6 +218,5 @@
             }
         });
     </script>
-    </body>
-    </html>
-    
+</body>
+</html>
