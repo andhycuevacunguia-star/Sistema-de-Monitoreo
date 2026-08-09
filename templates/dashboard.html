@@ -16,31 +16,27 @@
             --border: #334155;
         }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .header { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
         .nav-tabs { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
         .tab-btn { background-color: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 12px 22px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s ease; }
         .tab-btn:hover { background-color: #2e3b55; color: var(--text-main); }
-        .tab-btn.active { background-color: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+        .tab-btn.active { background-color: var(--accent); color: #fff; border-color: var(--accent); }
         .tab-btn.admin-btn { background-color: #7c2d12; border-color: #9a3412; }
-        .tab-btn.admin-btn.active { background-color: var(--danger); border-color: var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        .tab-content { display: none; background-color: var(--bg-card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-btn.admin-btn.active { background-color: var(--danger); border-color: var(--danger); }
+        .tab-content { display: none; background-color: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
+        .tab-content.active { display: block; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background-color: #0f172a; color: var(--accent); font-weight: 600; }
-        .btn-delete { background-color: var(--danger); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
-        .btn-delete:hover { background-color: var(--danger-hover); }
-        .btn-logout { color: #f87171; text-decoration: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); transition: all 0.2s; }
-        .btn-logout:hover { background: rgba(239, 68, 68, 0.2); }
-        .video-container { background-color: #000; width: 100%; max-width: 700px; height: 400px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); color: var(--text-muted); font-size: 16px; }
-        input[type="file"], input[type="text"] { margin: 10px 0 20px 0; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-main); color: white; width: 100%; max-width: 400px; }
+        th { background-color: #0f172a; color: var(--accent); }
+        .btn-delete { background-color: var(--danger); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-logout { color: #f87171; text-decoration: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .video-container { background-color: #000; width: 100%; max-width: 700px; height: 400px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); color: var(--text-muted); }
+        input[type="text"] { margin: 10px 0 20px 0; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-main); color: white; width: 100%; max-width: 400px; }
         .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 12px; }
     </style>
 </head>
 <body>
 
-    <!-- CABECERA -->
     <div class="header">
         <div>
             <h2 style="margin: 0 0 5px 0; color: #fff;">Sistema de Monitoreo - Mano Robótica</h2>
@@ -49,34 +45,28 @@
         <a href="/logout" class="btn-logout">Cerrar Sesión</a>
     </div>
 
-    <!-- PESTAÑAS -->
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="openTab('camara-vivo', this)"> Video en Vivo</button>
+        <button class="tab-btn active" onclick="openTab('camara-vivo', this)">Video en Vivo</button>
         <button class="tab-btn" onclick="openTab('datos-sensores', this)">Datos de Sensores</button>
-        <button class="tab-btn" onclick="openTab('fallas-encontradas', this)"> Fallas Encontradas</button>
+        <button class="tab-btn" onclick="openTab('fallas-encontradas', this)">Fallas Encontradas</button>
         
         {% if rol == 'admin' %}
-            <button class="tab-btn admin-btn" onclick="openTab('subir-videos', this)"> Subir Videos</button>
-            <button class="tab-btn admin-btn" onclick="openTab('eliminar-usuario', this)"> Eliminar Usuario</button>
+            <button class="tab-btn admin-btn" onclick="openTab('subir-videos', this)">Subir Videos</button>
+            <button class="tab-btn admin-btn" onclick="openTab('eliminar-usuario', this)">Eliminar Usuario</button>
         {% else %}
-            <button class="tab-btn" onclick="openTab('videos-tutoriales', this)"> Videos Tutoriales</button>
+            <button class="tab-btn" onclick="openTab('videos-tutoriales', this)">Videos Tutoriales</button>
         {% endif %}
     </div>
 
-    <!-- 1. VIDEO EN VIVO -->
     <div id="camara-vivo" class="tab-content active">
         <h3>Transmisión de Video en Vivo (ESP32-CAM)</h3>
-        <p style="color: var(--text-muted);">Visualización en tiempo real del entorno robótico:</p>
         <div class="video-container">
             <span>[ Stream de Video Activo - ESP32-CAM ]</span>
         </div>
     </div>
 
-    <!-- 2. DATOS DE LOS SENSORES -->
     <div id="datos-sensores" class="tab-content">
         <h3>Lectura de Datos de Sensores</h3>
-        <p style="color: var(--text-muted);">Datos en tiempo real sincronizados desde el hardware:</p>
-        
         {% if sensores %}
             {% for s in sensores %}
             <div class="sensor-card">
@@ -85,14 +75,12 @@
             </div>
             {% endfor %}
         {% else %}
-            <p style="color: var(--text-muted); font-style: italic;">Esperando conexión del Arduino / ESP32 para recibir datos...</p>
+            <p style="color: var(--text-muted); font-style: italic;">Esperando conexión del Arduino / ESP32...</p>
         {% endif %}
     </div>
 
-    <!-- 3. FALLAS ENCONTRADAS -->
     <div id="fallas-encontradas" class="tab-content">
         <h3>Diagnóstico y Registro de Fallas</h3>
-        <p style="color: var(--text-muted);">Historial de anomalías registradas en el sistema:</p>
         <table>
             <thead>
                 <tr>
@@ -109,88 +97,54 @@
                         <td>{{ f.created_at }}</td>
                         <td>{{ f.componente }}</td>
                         <td>{{ f.descripcion }}</td>
-                        <td><span style="color: #facc15; font-weight: 600;">{{ f.estado }}</span></td>
+                        <td><span style="color: #facc15;">{{ f.estado }}</span></td>
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr>
-                        <td colspan="4" style="text-align: center; color: var(--text-muted);">No se han registrado fallas recientes.</td>
-                    </tr>
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas recientes.</td></tr>
                 {% endif %}
             </tbody>
         </table>
     </div>
 
-    <!-- 4A. VIDEOS TUTORIALES (Dinamico conectado a Supabase) -->
     {% if rol != 'admin' %}
     <div id="videos-tutoriales" class="tab-content">
         <h3>Videos Tutoriales</h3>
-        <p style="color: var(--text-muted);">Guías de aprendizaje para el manejo del sistema:</p>
-        
-        <ul style="line-height: 1.8; list-style: none; padding: 0;">
+        <ul style="list-style: none; padding: 0;">
             {% if videos %}
                 {% for video in videos %}
-                    <li style="margin-bottom: 30px; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                        <strong style="color: var(--accent); font-size: 17px;">{{ video.titulo }}</strong>
-                        <br><br>
-                        <video controls width="100%" style="max-width: 600px; border-radius: 6px;">
-                            <source src="{{ video.ruta_video }}" type="video/mp4">
-                            Tu navegador no soporta la reproducción de video.
-                        </video>
+                    <li style="margin-bottom: 20px; background: #0f172a; padding: 15px; border-radius: 8px;">
+                        <strong style="color: var(--accent);">{{ video.titulo }}</strong><br>
+                        <a href="{{ video.ruta_video }}" target="_blank" style="color: #38bdf8;">Ver enlace del video</a>
                     </li>
                 {% endfor %}
             {% else %}
-                <li style="color: var(--text-muted); font-style: italic;">No hay videos tutoriales disponibles actualmente.</li>
+                <li style="color: var(--text-muted);">No hay videos disponibles.</li>
             {% endif %}
         </ul>
     </div>
     {% endif %}
 
-    <!-- 4B. SUBIR VIDEOS (Solo Admin) -->
-   {% if rol != 'admin' %}
-    <div id="videos-tutoriales" class="tab-content">
-        <h3>Videos Tutoriales</h3>
-        <p style="color: var(--text-muted);">Guías de aprendizaje para el manejo del sistema:</p>
-        
-        <div style="display: flex; flex-direction: column; gap: 25px;">
-            {% if videos %}
-                {% for video in videos %}
-                    <div style="background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                        <strong style="color: var(--accent); font-size: 17px;">{{ video.titulo }}</strong>
-                        <br><br>
-                        
-                        <!-- Si es un enlace de YouTube, lo muestra como iframe embebido -->
-                        {% if 'youtube.com' in video.ruta_video or 'youtu.be' in video.ruta_video %}
-                            {% set yt_id = video.ruta_video.split('/')[-1].split('?')[0] %}
-                            <iframe width="100%" height="315" src="https://www.youtube.com/embed/{{ yt_id }}" frameborder="0" allowfullscreen style="border-radius: 6px; max-width: 600px;"></iframe>
-                        {% else %}
-                            <!-- Si es un video directo en formato MP4 -->
-                            <video controls width="100%" style="max-width: 600px; border-radius: 6px;">
-                                <source src="{{ video.ruta_video }}" type="video/mp4">
-                                Tu navegador no soporta la reproducción de video.
-                            </video>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p style="color: var(--text-muted); font-style: italic;">No hay videos tutoriales disponibles actualmente.</p>
-            {% endif %}
-        </div>
+    {% if rol == 'admin' %}
+    <div id="subir-videos" class="tab-content">
+        <h3>Subir Videos Tutoriales</h3>
+        <form id="form-subir-video">
+            <label>Título del Video:</label><br>
+            <input type="text" id="video-titulo" placeholder="Ej: Mantenimiento" required><br>
+            
+            <label>Enlace del Video (URL):</label><br>
+            <input type="text" id="video-url" placeholder="https://..." required><br><br>
+            
+            <button type="submit" style="background-color: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Registrar Video</button>
+        </form>
     </div>
-    {% endif %}
 
-    <!-- 5. ELIMINAR USUARIO (Solo Admin) -->
     <div id="eliminar-usuario" class="tab-content">
-        <h3>Gestión y Control de Usuarios</h3>
-        <p style="color: var(--text-muted);">Lista general de cuentas registradas en la base de datos:</p>
+        <h3>Gestión de Usuarios</h3>
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Usuario</th>
-                    <th>Rol</th>
-                    <th>Registro</th>
-                    <th>Acción</th>
+                    <th>ID</th><th>Usuario</th><th>Rol</th><th>Registro</th><th>Acción</th>
                 </tr>
             </thead>
             <tbody>
@@ -200,9 +154,7 @@
                     <td><strong>{{ u.usuario }}</strong></td>
                     <td>{{ u.rol }}</td>
                     <td>{{ u.created_at }}</td>
-                    <td>
-                        <button class="btn-delete btn-eliminar" data-id="{{ u.id }}">Eliminar</button>
-                    </td>
+                    <td><button class="btn-delete btn-eliminar" data-id="{{ u.id }}">Eliminar</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -210,20 +162,16 @@
     </div>
     {% endif %}
 
-   <!-- SCRIPT DE PESTAÑAS, ELIMINACIÓN Y REGISTRO DE VIDEOS -->
     <script>
         function openTab(tabId, element) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
             document.getElementById(tabId).classList.add('active');
             element.classList.add('active');
         }
 
-        // Lógica para registrar el video mediante fetch al servidor
         document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const titulo = document.getElementById('video-titulo').value;
             const url_video = document.getElementById('video-url').value;
 
@@ -233,12 +181,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ titulo, url_video })
                 });
-
                 const res = await response.json();
                 alert(res.message);
-                if (res.success) {
-                    location.reload();
-                }
+                if (res.success) location.reload();
             } catch (error) {
                 alert('Error al conectar con el servidor.');
             }
@@ -247,8 +192,7 @@
         document.addEventListener('click', async function(event) {
             if (event.target.classList.contains('btn-eliminar')) {
                 const idUsuario = event.target.getAttribute('data-id');
-                
-                if (!confirm(`¿Estás seguro de eliminar el usuario con ID ${idUsuario}?`)) return;
+                if (!confirm(`¿Eliminar usuario ${idUsuario}?`)) return;
 
                 try {
                     const response = await fetch(`/eliminar_usuario/${idUsuario}`, { method: 'DELETE' });
@@ -256,7 +200,7 @@
                     alert(res.message);
                     if (res.success) location.reload();
                 } catch (error) {
-                    alert('Error al conectar con el servidor.');
+                    alert('Error al conectar.');
                 }
             }
         });
