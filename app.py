@@ -83,23 +83,35 @@ def dashboard():
     lista_videos = []
 
     if supabase:
+        # Carga segura de usuarios
         try:
             if session.get('rol') == 'admin':
                 res_u = supabase.table('Usuarios').select('id, usuario, rol, created_at').execute()
                 lista_usuarios = res_u.data
+        except Exception as e:
+            print(f"Error cargando usuarios: {e}")
 
+        # Carga segura de sensores
+        try:
             res_s = supabase.table('sensores').select('*').order('created_at', desc=True).limit(5).execute()
             lista_sensores = res_s.data
+        except Exception as e:
+            print(f"Error cargando sensores: {e}")
 
+        # Carga segura de fallas
+        try:
             res_f = supabase.table('fallas').select('*').order('created_at', desc=True).execute()
             lista_fallas = res_f.data
-
-            # Usando la tabla 'Tutoriales' con T mayúscula de manera segura
-            res_v = supabase.table('Tutoriales').select('*').order('created_at', desc=True).execute()
-            lista_videos = res_v.data
-
         except Exception as e:
-            print(f"Error al obtener datos en dashboard: {e}")
+            print(f"Error cargando fallas: {e}")
+
+        # Carga segura de tutoriales con manejo de errores independiente
+        try:
+            res_v = supabase.table('Tutoriales').select('*').execute()
+            lista_videos = res_v.data
+        except Exception as e:
+            print(f"Error cargando tutoriales: {e}")
+            lista_videos = []
 
     return render_template(
         'dashboard.html', 
