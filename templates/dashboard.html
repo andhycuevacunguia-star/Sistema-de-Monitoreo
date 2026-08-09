@@ -56,11 +56,11 @@
         {% endif %}
     </div>
 
- <div id="camara-vivo" class="tab-content active" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+<div id="camara-vivo" class="tab-content active" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
         <h3>Transmisión de Video en Vivo (ESP32-CAM)</h3>
-        <div style="background-color: #000; width: 400px; height: 300px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin: 0 auto;">
-            <!-- Apuntamos directamente al stream de video para eliminar los menús y barras -->
-            <iframe src="http://10.63.198.252/cam.mjpeg" style="width: 100%; height: 100%; border: none;" scrolling="no"></iframe>
+        <div style="background-color: #000; width: 400px; height: 300px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); position: relative; margin: 0 auto;">
+            <!-- Usamos la IP base limpia pero desplazamos y ampliamos el iframe para recortar los botones y dejar solo el video -->
+            <iframe src="http://10.63.198.252" style="position: absolute; top: -50px; left: -140px; width: 650px; height: 450px; border: none;" scrolling="no"></iframe>
         </div>
         <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
             
