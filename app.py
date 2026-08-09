@@ -80,21 +80,23 @@ def dashboard():
     lista_usuarios = []
     lista_sensores = []
     lista_fallas = []
+    lista_videos = []
 
     if supabase:
         try:
-            # Cargar usuarios si es admin
             if session.get('rol') == 'admin':
                 res_u = supabase.table('Usuarios').select('id, usuario, rol, created_at').execute()
                 lista_usuarios = res_u.data
 
-            # Cargar datos de sensores desde Supabase
             res_s = supabase.table('sensores').select('*').order('created_at', desc=True).limit(5).execute()
             lista_sensores = res_s.data
 
-            # Cargar fallas desde Supabase
             res_f = supabase.table('fallas').select('*').order('created_at', desc=True).execute()
             lista_fallas = res_f.data
+
+            res_v = supabase.table('tutoriales').select('*').order('created_at', desc=True).execute()
+            lista_videos = res_v.data
+
         except Exception as e:
             print(f"Error al obtener datos: {e}")
 
@@ -104,10 +106,11 @@ def dashboard():
         rol=session.get('rol', 'estudiante'),
         usuarios=lista_usuarios,
         sensores=lista_sensores,
-        fallas=lista_fallas
+        fallas=lista_fallas,
+        videos=lista_videos
     )
 
-# API para que el ESP32 / Arduino guarde datos de sensores
+# API para guardar datos de sensores (ESP32 / Arduino)
 @app.route('/api/guardar_sensor', methods=['POST'])
 def guardar_sensor():
     data = request.get_json()
@@ -132,6 +135,25 @@ def guardar_falla():
             'estado': data.get('estado', 'Pendiente')
         }).execute()
         return jsonify({'success': True, 'message': 'Falla registrada'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# <--- NUEVO: API para que el admin registre videos tutoriales desde la web --->
+@app.route('/api/subir_video', methods=['POST'])
+def subir_video():
+    if session.get('rol') != 'admin':
+        return jsonify({'success': False, 'message': 'Acceso denegado'}), 403
+    
+    data = request.get_json()
+    titulo = data.get('titulo')
+    url_video = data.get('url_video')
+
+    try:
+        supabase.table('tutoriales').insert({
+            'titulo': titulo,
+            'ruta_video': url_video
+        }).execute()
+        return jsonify({'success': True, 'message': 'Video registrado correctamente'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

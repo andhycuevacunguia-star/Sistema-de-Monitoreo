@@ -150,13 +150,17 @@
     {% if rol == 'admin' %}
     <div id="subir-videos" class="tab-content">
         <h3>Panel de Carga: Subir Videos Tutoriales</h3>
-        <p style="color: var(--text-muted);">Agrega material audiovisual para los usuarios:</p>
-        <form onsubmit="event.preventDefault(); alert('Video cargado exitosamente al servidor.');">
+        <p style="color: var(--text-muted);">Agrega material audiovisual ingresando el título y la URL del video:</p>
+        
+        <!-- Formulario funcional para guardar el video en la base de datos -->
+        <form id="form-subir-video">
             <label style="font-weight: 600;">Título del Video:</label><br>
-            <input type="text" placeholder="Ej: Mantenimiento Preventivo"><br>
-            <label style="font-weight: 600;">Archivo de Video:</label><br>
-            <input type="file" accept="video/*"><br><br>
-            <button type="submit" style="background-color: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
+            <input type="text" id="video-titulo" placeholder="Ej: Mantenimiento Preventivo" required><br>
+            
+            <label style="font-weight: 600;">Enlace del Video (URL Directa):</label><br>
+            <input type="text" id="video-url" placeholder="https://ejemplo.com/video.mp4" required><br><br>
+            
+            <button type="submit" style="background-color: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Registrar Video</button>
         </form>
     </div>
 
@@ -191,7 +195,7 @@
     </div>
     {% endif %}
 
-   <!-- SCRIPT DE PESTAÑAS Y ELIMINACIÓN -->
+   <!-- SCRIPT DE PESTAÑAS, ELIMINACIÓN Y REGISTRO DE VIDEOS -->
     <script>
         function openTab(tabId, element) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -200,6 +204,30 @@
             document.getElementById(tabId).classList.add('active');
             element.classList.add('active');
         }
+
+        // Lógica para registrar el video mediante fetch al servidor
+        document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const titulo = document.getElementById('video-titulo').value;
+            const url_video = document.getElementById('video-url').value;
+
+            try {
+                const response = await fetch('/api/subir_video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, url_video })
+                });
+
+                const res = await response.json();
+                alert(res.message);
+                if (res.success) {
+                    location.reload();
+                }
+            } catch (error) {
+                alert('Error al conectar con el servidor.');
+            }
+        });
 
         document.addEventListener('click', async function(event) {
             if (event.target.classList.contains('btn-eliminar')) {
