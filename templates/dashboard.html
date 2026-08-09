@@ -56,13 +56,13 @@
         {% endif %}
     </div>
 
- <div id="camara-vivo" class="tab-content active">
+ <div id="camara-vivo" class="tab-content active" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
         <h3>Transmisión de Video en Vivo (ESP32-CAM)</h3>
-        <div style="background-color: #000; width: 100%; max-width: 480px; height: 360px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); position: relative;">
-            <iframe src="http://10.63.198.252" style="position: absolute; top: -50px; left: -50px; width: calc(100% + 100px); height: calc(100% + 100px); border: none;"></iframe>
+        <div style="background-color: #000; width: 400px; height: 300px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); position: relative; display: flex; justify-content: center; align-items: center; margin: 0 auto;">
+            <iframe src="http://10.63.198.252" style="position: absolute; top: -70px; left: -90px; width: 580px; height: 450px; border: none;"></iframe>
         </div>
         <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
-            *Nota: Transmisión en tiempo real desde la red local.*
+            
         </p>
     </div>
 
