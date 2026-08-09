@@ -8,9 +8,7 @@
             --bg-main: #0f172a;
             --bg-card: #1e293b;
             --accent: #06b6d4;
-            --accent-hover: #0891b2;
             --danger: #ef4444;
-            --danger-hover: #dc2626;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border: #334155;
@@ -33,6 +31,7 @@
         .video-container { background-color: #000; width: 100%; max-width: 700px; height: 400px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); color: var(--text-muted); }
         input[type="text"] { margin: 10px 0 20px 0; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-main); color: white; width: 100%; max-width: 400px; }
         .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 12px; }
+        .video-card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; max-width: 650px; }
     </style>
 </head>
 <body>
@@ -49,12 +48,11 @@
         <button class="tab-btn active" onclick="openTab('camara-vivo', this)">Video en Vivo</button>
         <button class="tab-btn" onclick="openTab('datos-sensores', this)">Datos de Sensores</button>
         <button class="tab-btn" onclick="openTab('fallas-encontradas', this)">Fallas Encontradas</button>
+        <button class="tab-btn" onclick="openTab('videos-tutoriales', this)">Videos Tutoriales</button>
         
         {% if rol == 'admin' %}
             <button class="tab-btn admin-btn" onclick="openTab('subir-videos', this)">Subir Videos</button>
             <button class="tab-btn admin-btn" onclick="openTab('eliminar-usuario', this)">Eliminar Usuario</button>
-        {% else %}
-            <button class="tab-btn" onclick="openTab('videos-tutoriales', this)">Videos Tutoriales</button>
         {% endif %}
     </div>
 
@@ -107,33 +105,53 @@
         </table>
     </div>
 
-    {% if rol != 'admin' %}
     <div id="videos-tutoriales" class="tab-content">
         <h3>Videos Tutoriales</h3>
-        <ul style="list-style: none; padding: 0;">
+        <div style="display: flex; flex-direction: column; gap: 20px;">
             {% if videos %}
                 {% for video in videos %}
-                    <li style="margin-bottom: 20px; background: #0f172a; padding: 15px; border-radius: 8px;">
-                        <strong style="color: var(--accent);">{{ video.titulo }}</strong><br>
-                        <a href="{{ video.ruta_video }}" target="_blank" style="color: #38bdf8;">Ver enlace del video</a>
-                    </li>
+                    <div class="video-card">
+                        <h4 style="margin: 0 0 10px 0; color: var(--accent);">{{ video.titulo }}</h4>
+                        
+                        <!-- Miniatura / Reproductor Automático para YouTube -->
+                        {% if 'youtube.com' in video.ruta_video or 'youtu.be' in video.ruta_video %}
+                            {% if 'youtu.be/' in video.ruta_video %}
+                                {% set yt_id = video.ruta_video.split('youtu.be/')[1].split('?')[0] %}
+                            {% else %}
+                                {% set yt_id = video.ruta_video.split('v=')[1].split('&')[0] %}
+                            {% endif %}
+                            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
+                                <iframe src="https://www.youtube.com/embed/{{ yt_id }}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                            </div>
+                        {% else %}
+                            <video controls width="100%" style="border-radius: 6px; max-height: 350px;">
+                                <source src="{{ video.ruta_video }}" type="video/mp4">
+                                Tu navegador no soporta la reproducción de video.
+                            </video>
+                        {% endif %}
+
+                        {% if rol == 'admin' %}
+                            <div style="margin-top: 12px; text-align: right;">
+                                <button class="btn-delete btn-eliminar-video" data-id="{{ video.id }}">Eliminar Video</button>
+                            </div>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             {% else %}
-                <li style="color: var(--text-muted);">No hay videos disponibles.</li>
+                <p style="color: var(--text-muted); font-style: italic;">No hay videos tutoriales disponibles actualmente.</p>
             {% endif %}
-        </ul>
+        </div>
     </div>
-    {% endif %}
 
     {% if rol == 'admin' %}
     <div id="subir-videos" class="tab-content">
         <h3>Subir Videos Tutoriales</h3>
         <form id="form-subir-video">
             <label>Título del Video:</label><br>
-            <input type="text" id="video-titulo" placeholder="Ej: Mantenimiento" required><br>
+            <input type="text" id="video-titulo" placeholder="Ej: Configuración inicial" required><br>
             
-            <label>Enlace del Video (URL):</label><br>
-            <input type="text" id="video-url" placeholder="https://..." required><br><br>
+            <label>Enlace del Video (URL de YouTube o MP4):</label><br>
+            <input type="text" id="video-url" placeholder="https://youtu.be/..." required><br><br>
             
             <button type="submit" style="background-color: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Registrar Video</button>
         </form>
@@ -154,7 +172,7 @@
                     <td><strong>{{ u.usuario }}</strong></td>
                     <td>{{ u.rol }}</td>
                     <td>{{ u.created_at }}</td>
-                    <td><button class="btn-delete btn-eliminar" data-id="{{ u.id }}">Eliminar</button></td>
+                    <td><button class="btn-delete btn-eliminar-usuario" data-id="{{ u.id }}">Eliminar</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -189,10 +207,26 @@
             }
         });
 
+        // Eliminar video
         document.addEventListener('click', async function(event) {
-            if (event.target.classList.contains('btn-eliminar')) {
+            if (event.target.classList.contains('btn-eliminar-video')) {
+                const idVideo = event.target.getAttribute('data-id');
+                if (!confirm('¿Estás seguro de eliminar este video?')) return;
+
+                try {
+                    const response = await fetch(`/eliminar_video/${idVideo}`, { method: 'DELETE' });
+                    const res = await response.json();
+                    alert(res.message);
+                    if (res.success) location.reload();
+                } catch (error) {
+                    alert('Error al conectar con el servidor.');
+                }
+            }
+
+            // Eliminar usuario
+            if (event.target.classList.contains('btn-eliminar-usuario')) {
                 const idUsuario = event.target.getAttribute('data-id');
-                if (!confirm(`¿Eliminar usuario ${idUsuario}?`)) return;
+                if (!confirm(`¿Eliminar usuario ID ${idUsuario}?`)) return;
 
                 try {
                     const response = await fetch(`/eliminar_usuario/${idUsuario}`, { method: 'DELETE' });

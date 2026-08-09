@@ -5,7 +5,6 @@ from supabase import create_client, Client
 app = Flask(__name__)
 app.secret_key = "clave_secreta_mano_robotica_123"
 
-# Configuración directa de Supabase
 SUPABASE_URL = "https://mdekqtmpttchanmllzus.supabase.co"
 SUPABASE_KEY = "sb_publishable_A7yLQoU_B6spnL1NPCARVg_htc3C39n"
 
@@ -83,7 +82,6 @@ def dashboard():
     lista_videos = []
 
     if supabase:
-        # Carga segura de usuarios
         try:
             if session.get('rol') == 'admin':
                 res_u = supabase.table('Usuarios').select('id, usuario, rol, created_at').execute()
@@ -91,21 +89,18 @@ def dashboard():
         except Exception as e:
             print(f"Error cargando usuarios: {e}")
 
-        # Carga segura de sensores
         try:
             res_s = supabase.table('sensores').select('*').order('created_at', desc=True).limit(5).execute()
             lista_sensores = res_s.data
         except Exception as e:
             print(f"Error cargando sensores: {e}")
 
-        # Carga segura de fallas
         try:
             res_f = supabase.table('fallas').select('*').order('created_at', desc=True).execute()
             lista_fallas = res_f.data
         except Exception as e:
             print(f"Error cargando fallas: {e}")
 
-        # Carga segura de tutoriales con manejo de errores independiente
         try:
             res_v = supabase.table('Tutoriales').select('*').execute()
             lista_videos = res_v.data
@@ -166,6 +161,17 @@ def subir_video():
         return jsonify({'success': True, 'message': 'Video registrado correctamente'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/eliminar_video/<int:video_id>', methods=['DELETE', 'POST'])
+def eliminar_video(video_id):
+    if 'usuario' not in session or session.get('rol') != 'admin':
+        return jsonify({'success': False, 'message': 'Acceso denegado.'}), 403
+
+    try:
+        supabase.table('Tutoriales').delete().eq('id', video_id).execute()
+        return jsonify({'success': True, 'message': 'Video eliminado correctamente.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error al eliminar: {str(e)}'})
 
 @app.route('/eliminar_usuario/<int:user_id>', methods=['DELETE', 'POST'])
 def eliminar_usuario(user_id):
