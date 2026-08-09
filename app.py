@@ -149,7 +149,8 @@ def subir_video():
     url_video = data.get('url_video')
 
     try:
-        supabase.table('tutoriales').insert({
+        # Corregido a 'Tutoriales' con T mayúscula tal como está en tu base de datos
+        supabase.table('Tutoriales').insert({
             'titulo': titulo,
             'ruta_video': url_video
         }).execute()
