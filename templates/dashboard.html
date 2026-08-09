@@ -58,11 +58,11 @@
 
    <div id="camara-vivo" class="tab-content active">
         <h3>Transmisión de Video en Vivo (ESP32-CAM)</h3>
-        <div style="background-color: #000; width: 100%; max-width: 650px; height: 420px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border);">
-            <iframe src="http://10.63.198.252" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
+        <div style="background-color: #000; width: 100%; max-width: 650px; height: 420px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); position: relative;">
+            <iframe src="http://10.63.198.252/stream" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; object-fit: cover;"></iframe>
         </div>
         <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
-            *Nota: Si el navegador bloquea la vista previa por seguridad HTTPS, recuerda permitir el contenido inseguro en los ajustes del sitio de tu navegador.*
+            *Nota: Transmisión en tiempo real desde la red local.*
         </p>
     </div>
 
