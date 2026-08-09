@@ -94,11 +94,12 @@ def dashboard():
             res_f = supabase.table('fallas').select('*').order('created_at', desc=True).execute()
             lista_fallas = res_f.data
 
-            res_v = supabase.table('tutoriales').select('*').order('created_at', desc=True).execute()
+            # Usando la tabla 'Tutoriales' con T mayúscula de manera segura
+            res_v = supabase.table('Tutoriales').select('*').order('created_at', desc=True).execute()
             lista_videos = res_v.data
 
         except Exception as e:
-            print(f"Error al obtener datos: {e}")
+            print(f"Error al obtener datos en dashboard: {e}")
 
     return render_template(
         'dashboard.html', 
@@ -110,7 +111,6 @@ def dashboard():
         videos=lista_videos
     )
 
-# API para guardar datos de sensores (ESP32 / Arduino)
 @app.route('/api/guardar_sensor', methods=['POST'])
 def guardar_sensor():
     data = request.get_json()
@@ -124,7 +124,6 @@ def guardar_sensor():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# API para registrar fallas detectadas
 @app.route('/api/guardar_falla', methods=['POST'])
 def guardar_falla():
     data = request.get_json()
@@ -138,7 +137,6 @@ def guardar_falla():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# <--- NUEVO: API para que el admin registre videos tutoriales desde la web --->
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':
@@ -149,7 +147,6 @@ def subir_video():
     url_video = data.get('url_video')
 
     try:
-        # Corregido a 'Tutoriales' con T mayúscula tal como está en tu base de datos
         supabase.table('Tutoriales').insert({
             'titulo': titulo,
             'ruta_video': url_video
