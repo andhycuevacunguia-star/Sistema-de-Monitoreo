@@ -121,8 +121,7 @@
         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
             <h4>Subir Nuevo Video</h4>
             <form id="form-subir-video">
-                <input type="text" id="video-titulo" placeholder="Titulo del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
-                <input type="url" id="video-url" placeholder="URL de YouTube" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="url" id="video-url" placeholder="Pega el enlace de YouTube aqui..." required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
                 <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
             </form>
         </div>
@@ -132,7 +131,6 @@
             {% if videos %}
                 {% for video in videos %}
                     <div class="video-card" style="background: var(--bg-main); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                        <h4 style="margin: 0 0 10px 0; color: var(--text-main);">{{ video.titulo }}</h4>
                         <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; margin-bottom: 10px;">
                             <iframe src="{{ video.ruta_video }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen></iframe>
                         </div>
@@ -146,7 +144,6 @@
             {% endif %}
         </div>
     </div>
-
     <!-- 5. Pestaña Gestionar Usuarios -->
     {% if rol == 'admin' %}
     <div id="gestionar-usuarios" class="tab-content">
@@ -258,16 +255,14 @@ async function congelarYAnalizarFalla() {
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('video-vivo').prepend(document.getElementById('camara-wrapper'));
         });
-
-        document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
+document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const titulo = document.getElementById('video-titulo').value;
             const url_video = document.getElementById('video-url').value;
             try {
                 const response = await fetch('/api/subir_video', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, url_video })
+                    body: JSON.stringify({ url_video })
                 });
                 const res = await response.json();
                 alert(res.message);
