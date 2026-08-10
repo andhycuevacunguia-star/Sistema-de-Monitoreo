@@ -50,15 +50,61 @@
         {% endfor %}
     </div>
 
-    <div id="fallas-encontradas" class="tab-content">
-        <h3>Diagnóstico de Componentes</h3>
-        <div id="camara-slot-fallas"></div>
+   <div id="fallas-encontradas" class="tab-content">
+    <h3>Diagnóstico del Componente (Prueba con Cartón)</h3>
+    <div id="camara-slot-fallas"></div>
+    
+    <!-- Selector manual para la prueba (simula lo que ve la cámara) -->
+    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid var(--border); max-width: 450px; margin-left: auto; margin-right: auto; text-align: left;">
+        <label style="font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 8px;">Simular estado actual del cartón frente a la cámara:</label>
+        <select id="select-estado-prueba" style="width: 100%; padding: 10px; border-radius: 6px; background: var(--bg-main); color: white; border: 1px solid var(--border); margin-bottom: 12px;">
+            <option value="normal">Cartón en buen estado (Sin fallas)</option>
+            <option value="arrugado">Cartón arrugado / rayado</option>
+            <option value="roto">Cartón roto</option>
+            <option value="faltante">Le falta una parte al cartón</option>
+            <option value="vacio">No hay ningún cartón (Vacío)</option>
+        </select>
         
-        <div style="margin-top: 15px; text-align: center;">
-            <button id="btn-escanear" onclick="escanearCarton()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;">
-                 Escanear Cartón
+        <div style="text-align: center;">
+            <button id="btn-escanear" onclick="escanearCarton()" style="background: var(--accent); color: white; border: none; padding: 10px 22px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">
+                 Analizar y Guardar en Base de Datos
             </button>
         </div>
+    </div>
+    
+    <!-- Resultado Dinámico -->
+    <div id="resultado-diagnostico" style="background:rgba(16,185,129,0.1); border:1px solid #10b981; padding:15px; border-radius:8px; margin-top:15px; display: none; max-width: 450px; margin-left: auto; margin-right: auto; text-align: left;">
+        <strong id="titulo-estado" style="color:#10b981;">✔ Estado: Óptimo</strong>
+        <p id="desc-estado" style="margin:5px 0 0 0; color:var(--text-muted); font-size: 13px;"></p>
+    </div>
+
+    <!-- Historial de Fallas de la Base de Datos -->
+    <h3 style="margin-top: 35px;">Historial de Fallas Registradas (Supabase)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha / Hora</th>
+                <th>Componente</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if fallas %}
+                {% for f in fallas %}
+                <tr>
+                    <td>{{ f.created_at }}</td>
+                    <td>{{ f.componente }}</td>
+                    <td>{{ f.descripcion }}</td>
+                    <td><span style="color: #ef4444;">{{ f.estado }}</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas registradas aún.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
         
         <div id="resultado-diagnostico" style="background:rgba(16,185,129,0.1); border:1px solid #10b981; padding:20px; border-radius:8px; margin-top:20px; display: none;">
             <strong id="titulo-estado" style="color:#10b981;">✔ Estado: Óptimo (Normal)</strong>
@@ -87,38 +133,59 @@
             if (tabId === 'video-vivo' || tabId === 'fallas-encontradas') cam.style.display = 'block';
         }
 
-        async function escanearCarton() {
-            const btn = document.getElementById('btn-escanear');
-            const cont = document.getElementById('resultado-diagnostico');
-            const tit = document.getElementById('titulo-estado');
-            const desc = document.getElementById('desc-estado');
+       async function escanearCarton() {
+    const estadoSeleccionado = document.getElementById('select-estado-prueba').value;
+    const btn = document.getElementById('btn-escanear');
+    const cont = document.getElementById('resultado-diagnostico');
+    const tit = document.getElementById('titulo-estado');
+    const desc = document.getElementById('desc-estado');
 
-            btn.textContent = "Analizando...";
-            btn.disabled = true;
+    btn.textContent = "Analizando componente...";
+    btn.disabled = true;
 
-            try {
-                const response = await fetch('/api/detectar_fallas');
-                const data = await response.json();
-                cont.style.display = 'block';
+    try {
+        // Enviamos el estado seleccionado a Flask para que lo procese y guarde si es falla
+        const response = await fetch('/api/detectar_fallas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: estadoSeleccionado })
+        });
+        const data = await response.json();
+        
+        cont.style.display = 'block';
 
-                if (data.estado === 'normal') {
-                    cont.style.background = 'rgba(16,185,129,0.1)'; cont.style.border = '1px solid #10b981';
-                    tit.style.color = '#10b981'; tit.textContent = '✔ Estado: Normal (Bien)';
-                    desc.textContent = 'El cartón está en condiciones óptimas.';
-                } else {
-                    cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
-                    tit.style.color = '#ef4444';
-                    if (data.estado === 'rayado') { tit.textContent = '⚠ ¡Falla: Rayón!'; desc.textContent = 'Se identificó un rayón superficial.'; }
-                    else if (data.estado === 'roto') { tit.textContent = '⚠ ¡Falla: Roto!'; desc.textContent = 'Se detectó una ruptura.'; }
-                    else if (data.estado === 'faltante') { tit.textContent = '⚠ ¡Falla: Falta parte!'; desc.textContent = 'El cartón está incompleto.'; }
-                }
-            } catch (e) {
-                alert("Error al conectar con el servidor.");
-            } finally {
-                btn.textContent = "Escanear Cartón";
-                btn.disabled = false;
+        if (data.estado === 'normal') {
+            cont.style.background = 'rgba(16,185,129,0.1)'; cont.style.border = '1px solid #10b981';
+            tit.style.color = '#10b981'; tit.textContent = '✔ Estado: Óptimo';
+            desc.textContent = 'El cartón está en condiciones óptimas. No se detectan fallas.';
+        } else {
+            cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
+            tit.style.color = '#ef4444';
+            
+            if (data.estado === 'arrugado') {
+                tit.textContent = '⚠ ¡Falla Detectada: Cartón Arrugado / Rayado!';
+                desc.textContent = 'Se identificaron irregularidades superficiales en el material.';
+            } else if (data.estado === 'roto') {
+                tit.textContent = '⚠ ¡Falla Detectada: Cartón Roto!';
+                desc.textContent = 'Se detectó una ruptura en la estructura del componente.';
+            } else if (data.estado === 'faltante') {
+                tit.textContent = '⚠ ¡Falla Detectada: Parte Faltante!';
+                desc.textContent = 'El componente está incompleto.';
+            } else if (data.estado === 'vacio') {
+                tit.textContent = '❌ ¡Alerta: Componente no detectado!';
+                desc.textContent = 'Por favor, coloque un componente frente a la cámara.';
             }
+            
+            // Recargamos la página después de 2 segundos para que aparezca en la tabla de abajo automáticamente
+            setTimeout(() => { location.reload(); }, 2000);
         }
+    } catch (e) {
+        alert("Error al conectar con el servidor.");
+    } finally {
+        btn.textContent = " Analizar y Guardar en Base de Datos";
+        btn.disabled = false;
+    }
+}
 
         document.addEventListener('DOMContentLoaded', () => document.getElementById('video-vivo').appendChild(document.getElementById('camara-wrapper')));
     </script>
