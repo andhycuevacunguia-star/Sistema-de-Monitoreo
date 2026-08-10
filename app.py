@@ -25,7 +25,6 @@ def login():
         password = request.form['password']
         
         try:
-            # Nota: Usamos 'Usuarios' con Mayúscula como pide tu base de datos
             response = supabase.table('Usuarios').select('*').eq('usuario', usuario).eq('password', password).execute()
             if response.data:
                 user = response.data[0]
@@ -44,7 +43,7 @@ def registro():
     if request.method == 'POST':
         usuario = request.form['usuario']
         password = request.form['password']
-        rol = request.form['rol'] # Capturamos el rol elegido (usuario o admin)
+        rol = request.form['rol']
         
         try:
             supabase.table('Usuarios').insert({
@@ -64,19 +63,19 @@ def dashboard():
         return redirect(url_for('login'))
         
     try:
-        # Obtener datos de sensores
-        sensores_res = supabase.table('sensores').select('*').order('created_at', desc=True).limit(5).execute()
+        # Obtener datos de la tabla Lecturas (sensores)
+        sensores_res = supabase.table('Lecturas').select('*').order('created_at', desc=True).limit(5).execute()
         sensores = sensores_res.data
         
-        # Obtener fallas registradas
-        fallas_res = supabase.table('fallas').select('*').order('created_at', desc=True).execute()
+        # Obtener datos de la tabla Alertas_Fallas
+        fallas_res = supabase.table('Alertas_Fallas').select('*').order('created_at', desc=True).execute()
         fallas = fallas_res.data
         
-        # Obtener videos tutoriales
-        videos_res = supabase.table('videos').select('*').order('created_at', desc=True).execute()
+        # Obtener datos de la tabla Tutoriales
+        videos_res = supabase.table('Tutoriales').select('*').order('created_at', desc=True).execute()
         videos = videos_res.data
         
-        # Obtener usuarios si es admin
+        # Obtener datos de la tabla Usuarios si es admin
         usuarios = []
         if session.get('rol') == 'admin':
             usuarios_res = supabase.table('Usuarios').select('*').execute()
@@ -93,7 +92,7 @@ def dashboard():
                            videos=videos,
                            usuarios=usuarios)
 
-# Ruta para guardar las fallas desde el navegador al congelar y escanear
+# Ruta para guardar las fallas detectadas en la tabla Alertas_Fallas
 @app.route('/api/detectar_fallas', methods=['POST'])
 def detectar_fallas():
     data = request.get_json()
@@ -104,7 +103,7 @@ def detectar_fallas():
     estado_texto = "Detectado (ARRUGADO)"
     
     try:
-        supabase.table('fallas').insert({
+        supabase.table('Alertas_Fallas').insert({
             'componente': componente,
             'descripcion': descripcion,
             'estado': estado_texto
@@ -118,6 +117,7 @@ def detectar_fallas():
         "descripcion": descripcion
     })
 
+# Ruta para subir videos a la tabla Tutoriales
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':
@@ -133,7 +133,7 @@ def subir_video():
         url_video = url_video.replace("youtu.be/", "www.youtube.com/embed/")
 
     try:
-        supabase.table('videos').insert({
+        supabase.table('Tutoriales').insert({
             'titulo': titulo,
             'ruta_video': url_video
         }).execute()
@@ -146,7 +146,7 @@ def eliminar_video(id_video):
     if session.get('rol') != 'admin':
         return jsonify({"success": False, "message": "No autorizado"})
     try:
-        supabase.table('videos').delete().eq('id', id_video).execute()
+        supabase.table('Tutoriales').delete().eq('id', id_video).execute()
         return jsonify({"success": True, "message": "Video eliminado"})
     except Exception as e:
         return jsonify({"success": False, "message": f"Error: {e}"})
