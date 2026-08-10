@@ -44,7 +44,9 @@
     <div id="camara-wrapper" style="background-color: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center; max-width: 440px; margin-left: auto; margin-right: auto;">
         <h3 style="margin-top:0;">Transmisión ESP32-CAM</h3>
         <div id="marco-visual-camara" style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border); position: relative;">
-            <iframe id="iframe-esp32" src="{{ esp32_ip }}" style="width:420px; height:320px; border:none; margin-left:-10px; margin-top:-10px;" scrolling="no"></iframe>
+            <!-- Usamos un elemento img dinámico para control absoluto de congelamiento -->
+            <img id="stream-img" src="{{ esp32_ip }}" style="width:100%; height:100%; object-fit: cover;" alt="Transmision en vivo">
+            <canvas id="snapshot-canvas" style="display:none; width:100%; height:100%;"></canvas>
         </div>
     </div>
 
@@ -175,6 +177,8 @@
     {% endif %}
 
     <script>
+        const esp32Ip = "{{ esp32_ip }}";
+
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -195,9 +199,26 @@
             const cont = document.getElementById('resultado-diagnostico');
             const tit = document.getElementById('titulo-estado');
             const desc = document.getElementById('desc-estado');
+            const imgElement = document.getElementById('stream-img');
+            const canvas = document.getElementById('snapshot-canvas');
             
             btn.textContent = "Analizando componente...";
             btn.disabled = true;
+
+            // Congelación visual instantánea exacta del fotograma actual usando Canvas
+            try {
+                canvas.width = imgElement.naturalWidth || 400;
+                canvas.height = imgElement.naturalHeight || 295;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+                
+                // Ocultar streaming en vivo y mostrar la foto congelada estática
+                imgElement.style.display = 'none';
+                canvas.style.display = 'block';
+            } catch (e) {
+                // Respaldo por si hay restricciones CORS del navegador en el streaming
+                imgElement.src = ""; 
+            }
 
             try {
                 const response = await fetch('/api/detectar_fallas', {
@@ -212,7 +233,7 @@
                     cont.style.background = 'rgba(239,68,68,0.1)'; 
                     cont.style.border = '1px solid #ef4444';
                     tit.style.color = '#ef4444'; 
-                    tit.textContent = 'Falla Detectada: Carton Arrugado';
+                    tit.textContent = 'Falla Detectada: Carton Arrugado o Roto';
                 } else {
                     cont.style.background = 'rgba(34,197,94,0.1)'; 
                     cont.style.border = '1px solid #22c55e';
@@ -221,10 +242,11 @@
                 }
                 desc.textContent = res.descripcion;
 
-                setTimeout(() => { location.reload(); }, 2500);
+                setTimeout(() => { location.reload(); }, 3000);
 
             } catch (e) {
                 alert("Error al procesar la captura en el servidor.");
+                location.reload();
             } finally {
                 btn.textContent = "Escanear Componente";
                 btn.disabled = false;
