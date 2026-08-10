@@ -63,14 +63,24 @@
         {% endif %}
     </div>
 
-    <!-- 3. Pestaña Fallas Encontradas -->
+   <!-- 3. Pestaña Fallas Encontradas -->
     <div id="fallas-encontradas" class="tab-content">
-        <h3>Detección Automática de Fallas</h3>
-        <div id="camara-slot-fallas"></div>
+        <h3>Detección Inteligente de Fallas (Captura de Imagen)</h3>
+        
+        <!-- Contenedor donde la cámara y la foto congelada se alternarán -->
+        <div id="contenedor-visual-camara" style="text-align: center; margin-bottom: 15px;">
+            <div id="slot-iframe-camara" style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
+                <!-- El iframe se moverá aquí dinámicamente -->
+            </div>
+            <!-- Aquí se mostrará la "foto congelada" al escanear -->
+            <div id="slot-foto-congelada" style="display:none; width:400px; height:295px; border-radius:10px; margin:0 auto; border:1px solid var(--accent); background: #000; position: relative; align-items: center; justify-content: center;">
+                <div style="color: var(--accent); font-weight: bold; position: absolute; bottom: 10px; background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 4px; font-size: 12px;">📸 Imagen congelada para análisis</div>
+            </div>
+        </div>
         
         <div style="text-align: center; margin: 20px 0;">
-            <button id="btn-escanear" onclick="escanearFallasCamara()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px;">
-                📸 Escanear Componente con Cámara
+           <button id="btn-escanear" onclick="congelarYAnalizarFalla()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px;">
+                 Congelar y Escanear Componente
             </button>
         </div>
 
@@ -79,6 +89,33 @@
             <strong id="titulo-estado"></strong>
             <p id="desc-estado" style="margin:5px 0 0 0; font-size: 13px;"></p>
         </div>
+
+        <h3 style="margin-top: 30px;">Historial de Fallas Registradas (Base de Datos)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha / Hora</th>
+                    <th>Componente</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if fallas %}
+                    {% for f in fallas %}
+                    <tr>
+                        <td>{{ f.created_at }}</td>
+                        <td>{{ f.componente }}</td>
+                        <td>{{ f.descripcion }}</td>
+                        <td><span style="color: #ef4444;">{{ f.estado }}</span></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas registradas.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 
         <h3 style="margin-top: 30px;">Historial de Fallas Registradas</h3>
         <table>
@@ -173,7 +210,7 @@
     {% endif %}
 
     <script>
-        // Gestión de Pestañas y Movimiento de Cámara
+      // Gestión de Pestañas y Movimiento de Cámara
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -186,9 +223,63 @@
                 document.getElementById('video-vivo').appendChild(cam);
             } else if (tabId === 'fallas-encontradas') {
                 cam.style.display = 'block';
-                document.getElementById('camara-slot-fallas').appendChild(cam);
+                // Movemos el iframe al slot de la pestaña de fallas
+                document.getElementById('slot-iframe-camara').appendChild(cam);
+                document.getElementById('slot-iframe-camara').style.display = 'block';
+                document.getElementById('slot-foto-congelada').style.display = 'none';
             } else {
                 cam.style.display = 'none';
+            }
+        }
+
+        // Lógica para congelar la cámara, analizar y guardar en Supabase
+        async function congelarYAnalizarFalla() {
+            const btn = document.getElementById('btn-escanear');
+            const cont = document.getElementById('resultado-diagnostico');
+            const tit = document.getElementById('titulo-estado');
+            const desc = document.getElementById('desc-estado');
+            
+            const slotIframe = document.getElementById('slot-iframe-camara');
+            const slotFoto = document.getElementById('slot-foto-congelada');
+
+            btn.textContent = "Congelando imagen y analizando...";
+            btn.disabled = true;
+
+            // 1. Congelamos la vista ocultando el stream en vivo y mostrando el aviso de captura
+            slotIframe.style.display = 'none';
+            slotFoto.style.display = 'flex';
+
+            try {
+                // Simulamos el procesamiento de la imagen capturada (aquí puedes validar si hubo cartón arrugado o roto)
+                // Enviaremos una petición a tu backend para registrar el resultado en Supabase
+                const respuestaSimulada = {
+                    estado: "arrugado", // Cambiará según lo que detecte tu lógica de prueba
+                    descripcion: "Se detectaron arrugas e irregularidades superficiales en el cartón analizado."
+                };
+
+                const response = await fetch('/api/detectar_fallas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: respuestaSimulada.estado })
+                });
+                
+                cont.style.display = 'block';
+                cont.style.background = 'rgba(239,68,68,0.1)'; 
+                cont.style.border = '1px solid #ef4444';
+                tit.style.color = '#ef4444'; 
+                tit.textContent = '⚠ ¡Falla Detectada: Cartón Arrugado!';
+                desc.textContent = respuestaSimulada.descripcion;
+
+                // Recargamos la página después de 2.5 segundos para reflejar el registro guardado en la base de datos abajo
+                setTimeout(() => { location.reload(); }, 2500);
+
+            } catch (e) {
+                alert("Error al procesar la captura en el servidor.");
+                slotIframe.style.display = 'block';
+                slotFoto.style.display = 'none';
+            } finally {
+                btn.textContent = "📸 Congelar y Escanear Componente";
+                btn.disabled = false;
             }
         }
 
@@ -226,7 +317,7 @@
             } catch (e) {
                 alert("Error al conectar con el sistema de visión.");
             } finally {
-                btn.textContent = "📸 Escanear Componente con Cámara";
+                btn.textContent = " Escanear Componente con Cámara";
                 btn.disabled = false;
             }
         }

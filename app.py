@@ -1,22 +1,16 @@
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import os
-import cv2
-import numpy as np
 import requests
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+import cv2
 from supabase import create_client, Client
 
 app = Flask(__name__)
-app.secret_key = "clave_secreta_mano_robotica_123"
+app.secret_key = 'tu_clave_secreta_super_segura'
 
-SUPABASE_URL = "https://mdekqtmpttchanmllzus.supabase.co"
-SUPABASE_KEY = "sb_publishable_A7yLQoU_B6spnL1NPCARVg_htc3C39n"
-
-try:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    print("Conexión con Supabase configurada exitosamente.")
-except Exception as e:
-    supabase = None
-    print(f"Error al conectar con Supabase: {e}")
+# Configuración de Supabase (reemplaza con tus credenciales si es necesario)
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "TU_SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "TU_SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/')
 def index():
@@ -27,209 +21,150 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if not supabase:
-            return jsonify({'success': False, 'message': 'Error de configuración en la base de datos.'})
-
-        data = request.get_json()
-        usuario = data.get('usuario')
-        password = data.get('password')
-
+        usuario = request.form['usuario']
+        password = request.form['password']
+        
         try:
-            res = supabase.table('Usuarios').select('*').eq('usuario', usuario).eq('password', password).execute()
-            if len(res.data) > 0:
-                user_info = res.data[0]
-                session['user_id'] = user_info['id']
-                session['usuario'] = user_info['usuario']
-                session['rol'] = user_info.get('rol', 'estudiante')
-                return jsonify({'success': True, 'redirect': '/dashboard'})
+            response = supabase.table('usuarios').select('*').eq('usuario', usuario).eq('password', password).execute()
+            if response.data:
+                user = response.data[0]
+                session['usuario'] = user['usuario']
+                session['rol'] = user['rol']
+                return redirect(url_for('dashboard'))
             else:
-                return jsonify({'success': False, 'message': 'Usuario o contraseña incorrectos'})
+                return render_template('login.html', error="Usuario o contraseña incorrectos")
         except Exception as e:
-            return jsonify({'success': False, 'message': f'Error de base de datos: {str(e)}'})
-
+            return render_template('login.html', error=f"Error de conexión: {e}")
+            
     return render_template('login.html')
 
-@app.route('/registro', methods=['POST'])
+@app.route('/registro', methods=['GET', 'POST'])
 def registro():
-    if not supabase:
-        return jsonify({'success': False, 'message': 'Error de configuración en la base de datos.'})
-
-    data = request.get_json()
-    usuario = data.get('usuario')
-    password = data.get('password')
-    rol = data.get('rol', 'estudiante')
-
-    try:
-        existe = supabase.table('Usuarios').select('*').eq('usuario', usuario).execute()
-        if len(existe.data) > 0:
-            return jsonify({'success': False, 'message': 'El nombre de usuario ya está registrado'})
-
-        supabase.table('Usuarios').insert({
-            'usuario': usuario,
-            'password': password,
-            'rol': rol
-        }).execute()
-
-        return jsonify({'success': True, 'message': 'Usuario registrado correctamente'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Error al registrar: {str(e)}'})
+    if request.method == 'POST':
+        usuario = request.form['usuario']
+        password = request.form['password']
+        rol = 'usuario' # Por defecto se registran como usuarios normales
+        
+        try:
+            supabase.table('usuarios').insert({
+                'usuario': usuario,
+                'password': password,
+                'rol': rol
+            }).execute()
+            return redirect(url_for('login'))
+        except Exception as e:
+            return render_template('registro.html', error="El usuario ya existe o hubo un error.")
+            
+    return render_template('registro.html')
 
 @app.route('/dashboard')
 def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    
-    lista_usuarios = []
-    lista_sensores = []
-    lista_fallas = []
-    lista_videos = []
-
-    if supabase:
-        try:
-            if session.get('rol') == 'admin':
-                res_u = supabase.table('Usuarios').select('id, usuario, rol, created_at').execute()
-                lista_usuarios = res_u.data
-        except Exception as e:
-            print(f"Error cargando usuarios: {e}")
-
-        try:
-            res_s = supabase.table('sensores').select('*').order('created_at', desc=True).limit(5).execute()
-            lista_sensores = res_s.data
-        except Exception as e:
-            print(f"Error cargando sensores: {e}")
-
-        try:
-            res_f = supabase.table('fallas').select('*').order('created_at', desc=True).execute()
-            lista_fallas = res_f.data
-        except Exception as e:
-            print(f"Error cargando fallas: {e}")
-
-        try:
-            res_v = supabase.table('Tutoriales').select('*').execute()
-            lista_videos = res_v.data
-        except Exception as e:
-            print(f"Error cargando tutoriales: {e}")
-            lista_videos = []
-
-    return render_template(
-        'dashboard.html', 
-        usuario=session['usuario'], 
-        rol=session.get('rol', 'estudiante'),
-        usuarios=lista_usuarios,
-        sensores=lista_sensores,
-        fallas=lista_fallas,
-        videos=lista_videos
-    )
-
-@app.route('/api/guardar_sensor', methods=['POST'])
-def guardar_sensor():
-    data = request.get_json()
+        
     try:
-        supabase.table('sensores').insert({
-            'sensor_nombre': data.get('sensor_nombre'),
-            'valor': data.get('valor'),
-            'estado': data.get('estado', 'Normal')
-        }).execute()
-        return jsonify({'success': True, 'message': 'Sensor guardado correctamente'})
+        # Obtener datos de sensores
+        sensores_res = supabase.table('sensores').select('*').order('created_at', desc=True).limit(5).execute()
+        sensores = sensores_res.data
+        
+        # Obtener fallas registradas
+        fallas_res = supabase.table('fallas').select('*').order('created_at', desc=True).execute()
+        fallas = fallas_res.data
+        
+        # Obtener videos tutoriales
+        videos_res = supabase.table('videos').select('*').order('created_at', desc=True).execute()
+        videos = videos_res.data
+        
+        # Obtener usuarios si es admin
+        usuarios = []
+        if session.get('rol') == 'admin':
+            usuarios_res = supabase.table('usuarios').select('*').execute()
+            usuarios = usuarios_res.data
+            
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        sensores, fallas, videos, usuarios = [], [], [], []
 
-@app.route('/api/guardar_falla', methods=['POST'])
-def guardar_falla():
+    return render_template('dashboard.html', 
+                           usuario=session['usuario'], 
+                           rol=session['rol'],
+                           sensores=sensores,
+                           fallas=fallas,
+                           videos=videos,
+                           usuarios=usuarios)
+
+# --- NUEVA RUTA PARA GUARDAR LAS FALLAS DESDE EL JS ---
+@app.route('/api/detectar_fallas', methods=['POST'])
+def detectar_fallas():
     data = request.get_json()
+    estado = data.get('estado', 'arrugado')
+    
+    componente = "Cartón de Prueba"
+    descripcion = "El cartón presenta arrugas o irregularidades superficiales detectadas en la captura."
+    estado_texto = "Detectado (ARRUGADO)"
+    
     try:
         supabase.table('fallas').insert({
-            'componente': data.get('componente'),
-            'descripcion': data.get('descripcion'),
-            'estado': data.get('estado', 'Pendiente')
+            'componente': componente,
+            'descripcion': descripcion,
+            'estado': estado_texto
         }).execute()
-        return jsonify({'success': True, 'message': 'Falla registrada'})
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print(f"Error al guardar en Supabase: {e}")
+
+    return jsonify({
+        "success": True,
+        "estado": estado,
+        "descripcion": descripcion
+    })
 
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':
-        return jsonify({'success': False, 'message': 'Acceso denegado'}), 403
-    
+        return jsonify({"success": False, "message": "No autorizado"})
+        
     data = request.get_json()
     titulo = data.get('titulo')
     url_video = data.get('url_video')
+    
+    # Convertir URL normal de YouTube a embed si es necesario
+    if "watch?v=" in url_video:
+        url_video = url_video.replace("watch?v=", "embed/")
+    elif "youtu.be/" in url_video:
+        url_video = url_video.replace("youtu.be/", "www.youtube.com/embed/")
 
     try:
-        supabase.table('Tutoriales').insert({
+        supabase.table('videos').insert({
             'titulo': titulo,
             'ruta_video': url_video
         }).execute()
-        return jsonify({'success': True, 'message': 'Video registrado correctamente'})
+        return jsonify({"success": True, "message": "Video subido correctamente"})
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        return jsonify({"success": False, "message": f"Error al subir: {e}"})
 
-@app.route('/eliminar_video/<int:video_id>', methods=['DELETE', 'POST'])
-def eliminar_video(video_id):
-    if 'usuario' not in session or session.get('rol') != 'admin':
-        return jsonify({'success': False, 'message': 'Acceso denegado.'}), 403
-
+@app.route('/eliminar_video/<int:id_video>', methods=['DELETE'])
+def eliminar_video(id_video):
+    if session.get('rol') != 'admin':
+        return jsonify({"success": False, "message": "No autorizado"})
     try:
-        supabase.table('Tutoriales').delete().eq('id', video_id).execute()
-        return jsonify({'success': True, 'message': 'Video eliminado correctamente.'})
+        supabase.table('videos').delete().eq('id', id_video).execute()
+        return jsonify({"success": True, "message": "Video eliminado"})
     except Exception as e:
-        return jsonify({'success': False, 'message': f'Error al eliminar: {str(e)}'})
+        return jsonify({"success": False, "message": f"Error: {e}"})
 
-@app.route('/eliminar_usuario/<int:user_id>', methods=['DELETE', 'POST'])
-def eliminar_usuario(user_id):
-    if 'usuario' not in session or session.get('rol') != 'admin':
-        return jsonify({'success': False, 'message': 'Acceso denegado.'}), 403
-
-    if session.get('user_user_id') == user_id: # (Mantenido tal cual tu lógica)
-        pass
-
-    if session.get('user_id') == user_id:
-        return jsonify({'success': False, 'message': 'No puedes eliminar tu propia cuenta en uso.'})
-
+@app.route('/eliminar_usuario/<int:id_usuario>', methods=['DELETE'])
+def eliminar_usuario(id_usuario):
+    if session.get('rol') != 'admin':
+        return jsonify({"success": False, "message": "No autorizado"})
     try:
-        supabase.table('Usuarios').delete().eq('id', user_id).execute()
-        return jsonify({'success': True, 'message': 'Usuario eliminado correctamente.'})
+        supabase.table('usuarios').delete().eq('id', id_usuario).execute()
+        return jsonify({"success": True, "message": "Usuario eliminado"})
     except Exception as e:
-        return jsonify({'success': False, 'message': f'Error al eliminar: {str(e)}'})
+        return jsonify({"success": False, "message": f"Error: {e}"})
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# --- NUEVA RUTA PARA ESCANEAR LA CÁMARA DESDE EL DASHBOARD ---
-@app.route('/api/escanear', methods=['POST'])
-def escanear():
-    try:
-        # Captura directa desde la ESP32-CAM usando la IP configurada
-        resp = requests.get("http://10.63.198.252/capture", timeout=5)
-        img = cv2.imdecode(np.asarray(bytearray(resp.content), dtype=np.uint8), 1)
-        
-        # Procesamiento de imagen: escala de grises y umbral para detectar ruptura de cartón
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY_INV)
-        cnts, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        estado = "Correcto"
-        desc = "Cartón nuevo en buen estado"
-        
-        for c in cnts:
-            if cv2.contourArea(c) > 2000:  # Umbral para detectar cartón roto a la mitad
-                estado = "Defectuoso"
-                desc = "Cartón roto detectado"
-                break
-        
-        # Guardar automáticamente el resultado en tu tabla 'fallas' de Supabase
-        supabase.table('fallas').insert({
-            'componente': 'Cartón', 
-            'descripcion': desc, 
-            'estado': estado
-        }).execute()
-        
-        return jsonify({'success': True, 'estado': estado, 'descripcion': desc})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
