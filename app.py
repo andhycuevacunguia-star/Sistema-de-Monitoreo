@@ -3,7 +3,9 @@ import os
 import cv2
 import numpy as np
 import requests
+import base64
 from supabase import create_client, Client
+
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_super_segura'
@@ -88,41 +90,43 @@ def detectar_fallas():
     estado_texto = "Sin Componente"
 
     try:
-        img_resp = requests.get(f"{ESP32_CAM_URL}/capture", timeout=3)
-        if img_resp.status_code != 200:
-            img_resp = requests.get(f"{ESP32_CAM_URL}/hi.jpg", timeout=3)
+        data = request.get_json()
+        image_data = data.get('image', '')
+        
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
             
-        if img_resp.status_code == 200:
-            arr = np.frombuffer(img_resp.content, np.uint8)
-            frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        img_bytes = base64.b64decode(image_data)
+        arr = np.frombuffer(img_bytes, np.uint8)
+        frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        
+        if frame is not None:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             
-            if frame is not None:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                
-                # Calcular brillo promedio para saber si hay algo enfocado
-                brillo_promedio = np.mean(gray)
-                
-                # Calcular la cantidad de bordes (para ver si el cartón está roto/partido o entero)
-                edges = cv2.Canny(gray, 100, 200)
-                conteo_bordes = np.sum(edges > 0)
+            # Analizar brillo y bordes reales de la imagen capturada
+            brillo_promedio = np.mean(gray)
+            edges = cv2.Canny(gray, 100, 200)
+            conteo_bordes = np.sum(edges > 0)
 
-                # 1. Si el brillo es muy bajo o muy alto sin forma, no hay componente
-                if brillo_promedio < 35 or brillo_promedio > 230:
-                    estado_resultado = "sin_componente"
-                    descripcion = "No se detecta ningun componente."
-                    estado_texto = "Sin Componente"
-                # 2. Si hay demasiados bordes fragmentados o huecos (Cartón partido a la mitad)
-                elif conteo_bordes > 3500:
-                    estado_resultado = "partido"
-                    descripcion = "Papel partido casi a la mitad."
-                    estado_texto = "Falla: Papel Partido"
-                # 3. Si el cartón está completo y estable
-                else:
-                    estado_resultado = "normal"
-                    descripcion = "No hay ninguna falla."
-                    estado_texto = "Normal"
+            # 1. Si no hay suficiente iluminación u objeto
+            if brillo_promedio < 30 or brillo_promedio > 235:
+                estado_resultado = "sin_componente"
+                descripcion = "No se detecta ningun componente."
+                estado_texto = "Sin Componente"
+            # 2. Si el cartón está partido / roto a la mitad
+            elif conteo_bordes > 3000:
+                estado_resultado = "partido"
+                descripcion = "Papel partido casi a la mitad."
+                estado_texto = "Falla: Papel Partido"
+            # 3. Si el cartón está completo y aprobado
+            else:
+                estado_resultado = "normal"
+                descripcion = "No hay ninguna falla."
+                estado_texto = "Normal"
         else:
-            descripcion = "No se pudo capturar la imagen de la camara."
+            descripcion = "No se pudo procesar la imagen."
+            estado_texto = "Error"
+            
     except Exception as e:
         print(f"Error de vision: {e}")
         descripcion = "Error al escanear el componente."

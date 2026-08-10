@@ -201,22 +201,25 @@ async function congelarYAnalizarFalla() {
             btn.textContent = "Analizando componente...";
             btn.disabled = true;
 
+            let imageDataURL = "";
             try {
-                canvas.width = imgElement.naturalWidth || 400;
-                canvas.height = imgElement.naturalHeight || 295;
+                canvas.width = imgElement.naturalWidth || imgElement.width || 400;
+                canvas.height = imgElement.naturalHeight || imgElement.height || 295;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+                imageDataURL = canvas.toDataURL('image/jpeg');
+                
                 imgElement.style.display = 'none';
                 canvas.style.display = 'block';
             } catch (e) {
-                imgElement.src = ""; 
+                console.error("Error al capturar canvas:", e);
             }
 
             try {
                 const response = await fetch('/api/detectar_fallas', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
+                    body: JSON.stringify({ image: imageDataURL })
                 });
                 const res = await response.json();
                 
