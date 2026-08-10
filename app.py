@@ -25,7 +25,8 @@ def login():
         password = request.form['password']
         
         try:
-            response = supabase.table('usuarios').select('*').eq('usuario', usuario).eq('password', password).execute()
+            # Nota: Usamos 'Usuarios' con Mayúscula como pide tu base de datos
+            response = supabase.table('Usuarios').select('*').eq('usuario', usuario).eq('password', password).execute()
             if response.data:
                 user = response.data[0]
                 session['usuario'] = user['usuario']
@@ -43,17 +44,17 @@ def registro():
     if request.method == 'POST':
         usuario = request.form['usuario']
         password = request.form['password']
-        rol = 'usuario' # Por defecto se registran como usuarios normales
+        rol = request.form['rol'] # Capturamos el rol elegido (usuario o admin)
         
         try:
-            supabase.table('usuarios').insert({
+            supabase.table('Usuarios').insert({
                 'usuario': usuario,
                 'password': password,
                 'rol': rol
             }).execute()
             return redirect(url_for('login'))
         except Exception as e:
-            return render_template('registro.html', error="El usuario ya existe o hubo un error.")
+            return render_template('registro.html', error="El usuario ya existe o hubo un error al registrar.")
             
     return render_template('registro.html')
 
@@ -78,7 +79,7 @@ def dashboard():
         # Obtener usuarios si es admin
         usuarios = []
         if session.get('rol') == 'admin':
-            usuarios_res = supabase.table('usuarios').select('*').execute()
+            usuarios_res = supabase.table('Usuarios').select('*').execute()
             usuarios = usuarios_res.data
             
     except Exception as e:
@@ -126,7 +127,6 @@ def subir_video():
     titulo = data.get('titulo')
     url_video = data.get('url_video')
     
-    # Convertir URL normal de YouTube a embed si es necesario
     if "watch?v=" in url_video:
         url_video = url_video.replace("watch?v=", "embed/")
     elif "youtu.be/" in url_video:
@@ -156,7 +156,7 @@ def eliminar_usuario(id_usuario):
     if session.get('rol') != 'admin':
         return jsonify({"success": False, "message": "No autorizado"})
     try:
-        supabase.table('usuarios').delete().eq('id', id_usuario).execute()
+        supabase.table('Usuarios').delete().eq('id', id_usuario).execute()
         return jsonify({"success": True, "message": "Usuario eliminado"})
     except Exception as e:
         return jsonify({"success": False, "message": f"Error: {e}"})
