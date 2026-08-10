@@ -3,9 +3,7 @@ import os
 import cv2
 import numpy as np
 import requests
-import base64
 from supabase import create_client, Client
-
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_super_segura'
@@ -83,6 +81,55 @@ def dashboard():
                            usuarios=usuarios,
                            esp32_ip=ESP32_CAM_URL)
 
+def analizar_imagen_carton(frame):
+    """
+    Analiza el frame capturado y determina el estado del carton:
+    - sin_componente: no hay nada en la zona de escaneo
+    - roto: el carton esta partido o con un corte/hueco grande
+    - arrugado: el carton tiene arrugas (muchos pliegues pequeños)
+    - linea: el carton tiene una linea/raya recta marcada
+    - normal: el carton esta en buen estado
+    """
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    brillo_promedio = np.mean(gray)
+
+    # 1. Sin componente: muy oscuro (nada en camara) o muy claro (sobreexpuesto)
+    if brillo_promedio < 35 or brillo_promedio > 230:
+        return "sin_componente", "No se detecta ningun componente en la zona de escaneo.", "Sin Componente"
+
+    edges = cv2.Canny(gray, 60, 180)
+    conteo_bordes = int(np.sum(edges > 0))
+
+    # 2. Buscar lineas rectas largas (rayas o cortes derechos)
+    lineas = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=60,
+                              minLineLength=90, maxLineGap=8)
+    linea_larga_detectada = False
+    if lineas is not None:
+        for l in lineas:
+            x1, y1, x2, y2 = l[0]
+            largo = np.hypot(x2 - x1, y2 - y1)
+            if largo > 110:
+                linea_larga_detectada = True
+                break
+
+    # 3. Contornos para diferenciar "roto" de "arrugado"
+    contornos, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    num_contornos = len(contornos)
+    area_contorno_mayor = max((cv2.contourArea(c) for c in contornos), default=0)
+
+    if linea_larga_detectada and conteo_bordes < 6000:
+        return "linea", "Se detecto una linea/raya marcada en el carton.", "Falla: Linea Detectada"
+
+    if conteo_bordes > 6000 or area_contorno_mayor > 4000:
+        return "roto", "El carton esta roto o partido.", "Falla: Carton Roto"
+
+    if num_contornos > 35 and conteo_bordes > 1800:
+        return "arrugado", "El carton presenta arrugas en su superficie.", "Falla: Carton Arrugado"
+
+    return "normal", "No hay ninguna falla.", "Normal"
+
 @app.route('/api/detectar_fallas', methods=['POST'])
 def detectar_fallas():
     estado_resultado = "sin_componente"
@@ -90,43 +137,18 @@ def detectar_fallas():
     estado_texto = "Sin Componente"
 
     try:
-        data = request.get_json()
-        image_data = data.get('image', '')
-        
-        if ',' in image_data:
-            image_data = image_data.split(',')[1]
+        img_resp = requests.get(f"{ESP32_CAM_URL}/capture", timeout=3)
+        if img_resp.status_code != 200:
+            img_resp = requests.get(f"{ESP32_CAM_URL}/hi.jpg", timeout=3)
             
-        img_bytes = base64.b64decode(image_data)
-        arr = np.frombuffer(img_bytes, np.uint8)
-        frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-        
-        if frame is not None:
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if img_resp.status_code == 200:
+            arr = np.frombuffer(img_resp.content, np.uint8)
+            frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
             
-            # Analizar brillo y bordes reales de la imagen capturada
-            brillo_promedio = np.mean(gray)
-            edges = cv2.Canny(gray, 100, 200)
-            conteo_bordes = np.sum(edges > 0)
-
-            # 1. Si no hay suficiente iluminación u objeto
-            if brillo_promedio < 30 or brillo_promedio > 235:
-                estado_resultado = "sin_componente"
-                descripcion = "No se detecta ningun componente."
-                estado_texto = "Sin Componente"
-            # 2. Si el cartón está partido / roto a la mitad
-            elif conteo_bordes > 3000:
-                estado_resultado = "partido"
-                descripcion = "Papel partido casi a la mitad."
-                estado_texto = "Falla: Papel Partido"
-            # 3. Si el cartón está completo y aprobado
-            else:
-                estado_resultado = "normal"
-                descripcion = "No hay ninguna falla."
-                estado_texto = "Normal"
+            if frame is not None:
+                estado_resultado, descripcion, estado_texto = analizar_imagen_carton(frame)
         else:
-            descripcion = "No se pudo procesar la imagen."
-            estado_texto = "Error"
-            
+            descripcion = "No se pudo capturar la imagen de la camara."
     except Exception as e:
         print(f"Error de vision: {e}")
         descripcion = "Error al escanear el componente."
@@ -147,6 +169,7 @@ def detectar_fallas():
         "descripcion": descripcion,
         "estado_texto": estado_texto
     })
+
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':

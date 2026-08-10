@@ -99,10 +99,10 @@
                         <td>{{ f.componente }}</td>
                         <td>{{ f.descripcion }}</td>
                         <td>
-                            {% if f.estado == 'Arrugado' %}
-                                <span style="color: var(--danger); font-weight: bold;">{{ f.estado }}</span>
-                            {% else %}
+                            {% if f.estado == 'Normal' %}
                                 <span style="color: var(--success); font-weight: bold;">{{ f.estado }}</span>
+                            {% else %}
+                                <span style="color: var(--danger); font-weight: bold;">{{ f.estado }}</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -121,7 +121,8 @@
         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
             <h4>Subir Nuevo Video</h4>
             <form id="form-subir-video">
-                <input type="url" id="video-url" placeholder="Pega el enlace de YouTube aqui..." required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="text" id="video-titulo" placeholder="Titulo del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="url" id="video-url" placeholder="URL de YouTube" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
                 <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
             </form>
         </div>
@@ -131,6 +132,7 @@
             {% if videos %}
                 {% for video in videos %}
                     <div class="video-card" style="background: var(--bg-main); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin: 0 0 10px 0; color: var(--text-main);">{{ video.titulo }}</h4>
                         <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; margin-bottom: 10px;">
                             <iframe src="{{ video.ruta_video }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen></iframe>
                         </div>
@@ -144,6 +146,7 @@
             {% endif %}
         </div>
     </div>
+
     <!-- 5. Pestaña Gestionar Usuarios -->
     {% if rol == 'admin' %}
     <div id="gestionar-usuarios" class="tab-content">
@@ -201,25 +204,22 @@ async function congelarYAnalizarFalla() {
             btn.textContent = "Analizando componente...";
             btn.disabled = true;
 
-            let imageDataURL = "";
             try {
-                canvas.width = imgElement.naturalWidth || imgElement.width || 400;
-                canvas.height = imgElement.naturalHeight || imgElement.height || 295;
+                canvas.width = imgElement.naturalWidth || 400;
+                canvas.height = imgElement.naturalHeight || 295;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
-                imageDataURL = canvas.toDataURL('image/jpeg');
-                
                 imgElement.style.display = 'none';
                 canvas.style.display = 'block';
             } catch (e) {
-                console.error("Error al capturar canvas:", e);
+                imgElement.src = ""; 
             }
 
             try {
                 const response = await fetch('/api/detectar_fallas', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: imageDataURL })
+                    body: JSON.stringify({})
                 });
                 const res = await response.json();
                 
@@ -230,11 +230,21 @@ async function congelarYAnalizarFalla() {
                     cont.style.border = '1px solid #94a3b8';
                     tit.style.color = '#94a3b8'; 
                     tit.textContent = 'Sin Componente';
-                } else if (res.estado === 'partido') {
+                } else if (res.estado === 'roto') {
                     cont.style.background = 'rgba(239,68,68,0.1)'; 
                     cont.style.border = '1px solid #ef4444';
                     tit.style.color = '#ef4444'; 
-                    tit.textContent = 'Falla Detectada';
+                    tit.textContent = 'Carton Roto';
+                } else if (res.estado === 'arrugado') {
+                    cont.style.background = 'rgba(239,68,68,0.1)'; 
+                    cont.style.border = '1px solid #ef4444';
+                    tit.style.color = '#ef4444'; 
+                    tit.textContent = 'Carton Arrugado';
+                } else if (res.estado === 'linea') {
+                    cont.style.background = 'rgba(239,68,68,0.1)'; 
+                    cont.style.border = '1px solid #ef4444';
+                    tit.style.color = '#ef4444'; 
+                    tit.textContent = 'Linea Detectada';
                 } else {
                     cont.style.background = 'rgba(34,197,94,0.1)'; 
                     cont.style.border = '1px solid #22c55e';
@@ -258,14 +268,16 @@ async function congelarYAnalizarFalla() {
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('video-vivo').prepend(document.getElementById('camara-wrapper'));
         });
-document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
+
+        document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
             e.preventDefault();
+            const titulo = document.getElementById('video-titulo').value;
             const url_video = document.getElementById('video-url').value;
             try {
                 const response = await fetch('/api/subir_video', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url_video })
+                    body: JSON.stringify({ titulo, url_video })
                 });
                 const res = await response.json();
                 alert(res.message);
