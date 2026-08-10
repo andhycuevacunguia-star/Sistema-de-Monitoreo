@@ -1,4 +1,7 @@
 import os
+import cv2
+import numpy as np
+import requests
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from supabase import create_client, Client
 
@@ -178,6 +181,9 @@ def eliminar_usuario(user_id):
     if 'usuario' not in session or session.get('rol') != 'admin':
         return jsonify({'success': False, 'message': 'Acceso denegado.'}), 403
 
+    if session.get('user_user_id') == user_id: # (Mantenido tal cual tu lógica)
+        pass
+
     if session.get('user_id') == user_id:
         return jsonify({'success': False, 'message': 'No puedes eliminar tu propia cuenta en uso.'})
 
@@ -191,6 +197,39 @@ def eliminar_usuario(user_id):
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+# --- NUEVA RUTA PARA ESCANEAR LA CÁMARA DESDE EL DASHBOARD ---
+@app.route('/api/escanear', methods=['POST'])
+def escanear():
+    try:
+        # Captura directa desde la ESP32-CAM usando la IP configurada
+        resp = requests.get("http://10.63.198.252/capture", timeout=5)
+        img = cv2.imdecode(np.asarray(bytearray(resp.content), dtype=np.uint8), 1)
+        
+        # Procesamiento de imagen: escala de grises y umbral para detectar ruptura de cartón
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY_INV)
+        cnts, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        estado = "Correcto"
+        desc = "Cartón nuevo en buen estado"
+        
+        for c in cnts:
+            if cv2.contourArea(c) > 2000:  # Umbral para detectar cartón roto a la mitad
+                estado = "Defectuoso"
+                desc = "Cartón roto detectado"
+                break
+        
+        # Guardar automáticamente el resultado en tu tabla 'fallas' de Supabase
+        supabase.table('fallas').insert({
+            'componente': 'Cartón', 
+            'descripcion': desc, 
+            'estado': estado
+        }).execute()
+        
+        return jsonify({'success': True, 'estado': estado, 'descripcion': desc})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
