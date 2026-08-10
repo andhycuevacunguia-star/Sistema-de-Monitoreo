@@ -63,19 +63,19 @@ def dashboard():
         return redirect(url_for('login'))
         
     try:
-        # Obtener datos de la tabla Lecturas (sensores)
+        # Obtener datos de sensores
         sensores_res = supabase.table('Lecturas').select('*').order('created_at', desc=True).limit(5).execute()
         sensores = sensores_res.data
         
-        # Obtener datos de la tabla Alertas_Fallas
+        # Obtener fallas registradas
         fallas_res = supabase.table('Alertas_Fallas').select('*').order('created_at', desc=True).execute()
         fallas = fallas_res.data
         
-        # Obtener datos de la tabla Tutoriales
+        # Obtener videos tutoriales
         videos_res = supabase.table('Tutoriales').select('*').order('created_at', desc=True).execute()
         videos = videos_res.data
         
-        # Obtener datos de la tabla Usuarios si es admin
+        # Obtener usuarios si es admin
         usuarios = []
         if session.get('rol') == 'admin':
             usuarios_res = supabase.table('Usuarios').select('*').execute()
@@ -92,7 +92,7 @@ def dashboard():
                            videos=videos,
                            usuarios=usuarios)
 
-# Ruta para guardar las fallas detectadas en la tabla Alertas_Fallas
+# Ruta para guardar las fallas detectadas
 @app.route('/api/detectar_fallas', methods=['POST'])
 def detectar_fallas():
     data = request.get_json()
@@ -117,7 +117,7 @@ def detectar_fallas():
         "descripcion": descripcion
     })
 
-# Ruta para subir videos a la tabla Tutoriales
+# Ruta para subir videos con conversión correcta a formato embed para que cargue la miniatura y reproductor
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':
@@ -125,17 +125,21 @@ def subir_video():
         
     data = request.get_json()
     titulo = data.get('titulo')
-    url_video = data.get('url_video')
+    url_video = data.get('url_video', '')
     
+    # Procesar la URL de YouTube para convertirla de forma limpia a embed
+    embed_url = url_video
     if "watch?v=" in url_video:
-        url_video = url_video.replace("watch?v=", "embed/")
+        video_id = url_video.split("watch?v=")[1].split("&")[0]
+        embed_url = f"https://www.youtube.com/embed/{video_id}"
     elif "youtu.be/" in url_video:
-        url_video = url_video.replace("youtu.be/", "www.youtube.com/embed/")
+        video_id = url_video.split("youtu.be/")[1].split("?")[0]
+        embed_url = f"https://www.youtube.com/embed/{video_id}"
 
     try:
         supabase.table('Tutoriales').insert({
             'titulo': titulo,
-            'ruta_video': url_video
+            'ruta_video': embed_url
         }).execute()
         return jsonify({"success": True, "message": "Video subido correctamente"})
     except Exception as e:
