@@ -193,8 +193,7 @@
                 cam.style.display = 'none';
             }
         }
-
-        async function congelarYAnalizarFalla() {
+async function congelarYAnalizarFalla() {
             const btn = document.getElementById('btn-escanear');
             const cont = document.getElementById('resultado-diagnostico');
             const tit = document.getElementById('titulo-estado');
@@ -205,18 +204,14 @@
             btn.textContent = "Analizando componente...";
             btn.disabled = true;
 
-            // Congelación visual instantánea exacta del fotograma actual usando Canvas
             try {
                 canvas.width = imgElement.naturalWidth || 400;
                 canvas.height = imgElement.naturalHeight || 295;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
-                
-                // Ocultar streaming en vivo y mostrar la foto congelada estática
                 imgElement.style.display = 'none';
                 canvas.style.display = 'block';
             } catch (e) {
-                // Respaldo por si hay restricciones CORS del navegador en el streaming
                 imgElement.src = ""; 
             }
 
@@ -229,20 +224,27 @@
                 const res = await response.json();
                 
                 cont.style.display = 'block';
-                if (res.estado === 'arrugado') {
+                
+                if (res.estado === 'sin_componente') {
+                    cont.style.background = 'rgba(148,163,184,0.1)'; 
+                    cont.style.border = '1px solid #94a3b8';
+                    tit.style.color = '#94a3b8'; 
+                    tit.textContent = 'Sin Componente';
+                } else if (res.estado === 'partido') {
                     cont.style.background = 'rgba(239,68,68,0.1)'; 
                     cont.style.border = '1px solid #ef4444';
                     tit.style.color = '#ef4444'; 
-                    tit.textContent = 'Falla Detectada: Carton Arrugado o Roto';
+                    tit.textContent = 'Falla Detectada';
                 } else {
                     cont.style.background = 'rgba(34,197,94,0.1)'; 
                     cont.style.border = '1px solid #22c55e';
                     tit.style.color = '#22c55e'; 
-                    tit.textContent = 'Componente Normal y Aprobado';
+                    tit.textContent = 'Componente Correcto';
                 }
+                
                 desc.textContent = res.descripcion;
 
-                setTimeout(() => { location.reload(); }, 3000);
+                setTimeout(() => { location.reload(); }, 3500);
 
             } catch (e) {
                 alert("Error al procesar la captura en el servidor.");

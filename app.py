@@ -83,12 +83,11 @@ def dashboard():
 
 @app.route('/api/detectar_fallas', methods=['POST'])
 def detectar_fallas():
-    estado_resultado = "normal"
-    descripcion = "Superficie de carton uniforme detectada correctamente."
-    estado_texto = "Normal"
+    estado_resultado = "sin_componente"
+    descripcion = "No se detecta ningun componente en la zona de escaneo."
+    estado_texto = "Sin Componente"
 
     try:
-        # Intentar capturar un fotograma real de la ESP32-CAM
         img_resp = requests.get(f"{ESP32_CAM_URL}/capture", timeout=3)
         if img_resp.status_code != 200:
             img_resp = requests.get(f"{ESP32_CAM_URL}/hi.jpg", timeout=3)
@@ -100,29 +99,34 @@ def detectar_fallas():
             if frame is not None:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 
-                # 1. Medir nivel de textura/bordes (detecta arrugas o dobleces)
-                laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+                # Calcular brillo promedio para saber si hay algo enfocado
+                brillo_promedio = np.mean(gray)
                 
-                # 2. Medir porcentaje de áreas oscuras o huecos (detecta si el cartón está a la mitad o roto)
-                _, thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY_INV)
-                dark_pixels_ratio = np.sum(thresh > 0) / thresh.size
+                # Calcular la cantidad de bordes (para ver si el cartón está roto/partido o entero)
+                edges = cv2.Canny(gray, 100, 200)
+                conteo_bordes = np.sum(edges > 0)
 
-                # Umbrales ajustados para cartón roto a la mitad o muy arrugado
-                if laplacian_var > 120 or dark_pixels_ratio > 0.25:
-                    estado_resultado = "arrugado"
-                    descripcion = "Se detecto carton roto a la mitad, arrugado o con irregularidades superficiales."
-                    estado_texto = "Arrugado"
+                # 1. Si el brillo es muy bajo o muy alto sin forma, no hay componente
+                if brillo_promedio < 35 or brillo_promedio > 230:
+                    estado_resultado = "sin_componente"
+                    descripcion = "No se detecta ningun componente."
+                    estado_texto = "Sin Componente"
+                # 2. Si hay demasiados bordes fragmentados o huecos (Cartón partido a la mitad)
+                elif conteo_bordes > 3500:
+                    estado_resultado = "partido"
+                    descripcion = "Papel partido casi a la mitad."
+                    estado_texto = "Falla: Papel Partido"
+                # 3. Si el cartón está completo y estable
                 else:
                     estado_resultado = "normal"
-                    descripcion = "Superficie de carton uniforme detectada correctamente."
+                    descripcion = "No hay ninguna falla."
                     estado_texto = "Normal"
         else:
-            descripcion = "No se pudo obtener el fotograma de la camara."
+            descripcion = "No se pudo capturar la imagen de la camara."
     except Exception as e:
-        print(f"Error en vision artificial: {e}")
-        estado_resultado = "normal"
-        descripcion = "Superficie analizada correctamente."
-        estado_texto = "Normal"
+        print(f"Error de vision: {e}")
+        descripcion = "Error al escanear el componente."
+        estado_texto = "Error"
 
     try:
         supabase.table('Alertas_Fallas').insert({
@@ -139,7 +143,6 @@ def detectar_fallas():
         "descripcion": descripcion,
         "estado_texto": estado_texto
     })
-
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':
