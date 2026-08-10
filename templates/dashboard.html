@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Sistema de Monitoreo - Mano Robótica</title>
     <style>
-        :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
+        :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --success: #22c55e; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
         body { font-family: sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
         .header { background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
@@ -40,11 +40,11 @@
         {% endif %}
     </div>
 
-    <!-- Contenedor Único de la Cámara con la IP corregida -->
-    <div id="camara-wrapper" style="background-color: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
+    <!-- Contenedor Único de la Cámara -->
+    <div id="camara-wrapper" style="background-color: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center; max-width: 440px; margin-left: auto; margin-right: auto;">
         <h3 style="margin-top:0;">Transmisión ESP32-CAM</h3>
-        <div style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
-            <iframe src="http://192.168.101.27" style="width:420px; height:320px; border:none;" scrolling="no"></iframe>
+        <div id="marco-visual-camara" style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border); position: relative;">
+            <iframe id="iframe-esp32" src="{{ esp32_ip }}" style="width:420px; height:320px; border:none; margin-left:-10px; margin-top:-10px;" scrolling="no"></iframe>
         </div>
     </div>
 
@@ -67,20 +67,13 @@
     <div id="fallas-encontradas" class="tab-content">
         <h3>Detección Inteligente de Fallas (Captura de Imagen)</h3>
         
-        <div id="contenedor-visual-camara" style="text-align: center; margin-bottom: 15px;">
-            <div id="slot-iframe-camara" style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
-            </div>
-            <div id="slot-foto-congelada" style="display:none; width:400px; height:295px; border-radius:10px; margin:0 auto; border:1px solid var(--accent); background: #000; position: relative; align-items: center; justify-content: center;">
-                <div style="color: var(--accent); font-weight: bold; position: absolute; bottom: 10px; background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 4px; font-size: 12px;">📸 Imagen congelada para análisis</div>
-            </div>
-        </div>
-        
         <div style="text-align: center; margin: 20px 0;">
            <button id="btn-escanear" onclick="congelarYAnalizarFalla()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px;">
-                Congelar y Escanear Componente
+                📸 Congelar y Escanear Componente
            </button>
         </div>
 
+        <!-- Resultado del Análisis -->
         <div id="resultado-diagnostico" style="padding:15px; border-radius:8px; margin-top:15px; display: none; max-width: 500px; margin-left: auto; margin-right: auto; text-align: left;">
             <strong id="titulo-estado"></strong>
             <p id="desc-estado" style="margin:5px 0 0 0; font-size: 13px;"></p>
@@ -103,7 +96,13 @@
                         <td>{{ f.created_at }}</td>
                         <td>{{ f.componente }}</td>
                         <td>{{ f.descripcion }}</td>
-                        <td><span style="color: #ef4444;">{{ f.estado }}</span></td>
+                        <td>
+                            {% if 'ARRUGADO' in f.estado %}
+                                <span style="color: var(--danger); font-weight: bold;">{{ f.estado }}</span>
+                            {% else %}
+                                <span style="color: var(--success); font-weight: bold;">{{ f.estado }}</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
@@ -116,13 +115,12 @@
     <!-- 4. Pestaña Tutoriales -->
     <div id="videos-tutoriales" class="tab-content">
         <h3>Videos Tutoriales</h3>
-        
         {% if rol == 'admin' %}
         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
             <h4>Subir Nuevo Video</h4>
             <form id="form-subir-video">
                 <input type="text" id="video-titulo" placeholder="Título del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
-                <input type="url" id="video-url" placeholder="URL del video (ej: https://www.youtube.com/watch?v=...)" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="url" id="video-url" placeholder="URL de YouTube (ej: https://www.youtube.com/watch?v=...)" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
                 <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
             </form>
         </div>
@@ -137,7 +135,7 @@
                             <iframe src="{{ video.ruta_video }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen></iframe>
                         </div>
                         {% if rol == 'admin' %}
-                            <button class="btn-delete btn-eliminar-video" data-id="{{ video.id }}" style="background-color: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; width: 100%;">Eliminar Video</button>
+                            <button class="btn-delete btn-eliminar-video" data-id="{{ video.id }}" style="width: 100%;">Eliminar Video</button>
                         {% endif %}
                     </div>
                 {% endfor %}
@@ -147,7 +145,7 @@
         </div>
     </div>
 
-    <!-- 5. Pestaña Gestionar Usuarios (Solo Admin) -->
+    <!-- 5. Pestaña Gestionar Usuarios -->
     {% if rol == 'admin' %}
     <div id="gestionar-usuarios" class="tab-content">
         <h3>Gestión de Usuarios Registrados</h3>
@@ -168,9 +166,7 @@
                     <td>{{ u.usuario }}</td>
                     <td>{{ u.rol }}</td>
                     <td style="color: var(--text-muted);">{{ u.created_at }}</td>
-                    <td>
-                        <button class="btn-delete btn-eliminar-usuario" data-id="{{ u.id }}">Eliminar</button>
-                    </td>
+                    <td><button class="btn-delete btn-eliminar-usuario" data-id="{{ u.id }}">Eliminar</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -186,14 +182,9 @@
             btnElement.classList.add('active');
 
             const cam = document.getElementById('camara-wrapper');
-            if (tabId === 'video-vivo') {
+            if (tabId === 'video-vivo' || tabId === 'fallas-encontradas') {
                 cam.style.display = 'block';
-                document.getElementById('video-vivo').appendChild(cam);
-            } else if (tabId === 'fallas-encontradas') {
-                cam.style.display = 'block';
-                document.getElementById('slot-iframe-camara').appendChild(cam);
-                document.getElementById('slot-iframe-camara').style.display = 'block';
-                document.getElementById('slot-foto-congelada').style.display = 'none';
+                document.getElementById(tabId).prepend(cam);
             } else {
                 cam.style.display = 'none';
             }
@@ -204,41 +195,42 @@
             const cont = document.getElementById('resultado-diagnostico');
             const tit = document.getElementById('titulo-estado');
             const desc = document.getElementById('desc-estado');
+            const iframe = document.getElementById('iframe-esp32');
             
-            const slotIframe = document.getElementById('slot-iframe-camara');
-            const slotFoto = document.getElementById('slot-foto-congelada');
-
-            btn.textContent = "Congelando imagen y analizando...";
+            btn.textContent = "🔍 Analizando componente con IA...";
             btn.disabled = true;
 
-            slotIframe.style.display = 'none';
-            slotFoto.style.display = 'flex';
+            // Congelar la transmisión de la cámara de forma visual
+            const iframeSrc = iframe.src;
+            iframe.src = "about:blank"; // Detiene la transmisión momentáneamente congelando el marco actual
 
             try {
-                const respuestaSimulada = {
-                    estado: "arrugado",
-                    descripcion: "Se detectaron arrugas e irregularidades superficiales en el cartón analizado."
-                };
-
                 const response = await fetch('/api/detectar_fallas', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estado: respuestaSimulada.estado })
+                    body: JSON.stringify({})
                 });
+                const res = await response.json();
                 
                 cont.style.display = 'block';
-                cont.style.background = 'rgba(239,68,68,0.1)'; 
-                cont.style.border = '1px solid #ef4444';
-                tit.style.color = '#ef4444'; 
-                tit.textContent = '⚠ ¡Falla Detectada: Cartón Arrugado!';
-                desc.textContent = respuestaSimulada.descripcion;
+                if (res.estado === 'arrugado') {
+                    cont.style.background = 'rgba(239,68,68,0.1)'; 
+                    cont.style.border = '1px solid #ef4444';
+                    tit.style.color = '#ef4444'; 
+                    tit.textContent = '⚠️ ¡Falla Detectada: Cartón Arrugado!';
+                } else {
+                    cont.style.background = 'rgba(34,197,94,0.1)'; 
+                    cont.style.border = '1px solid #22c55e';
+                    tit.style.color = '#22c55e'; 
+                    tit.textContent = '✅ ¡Componente Normal y Aprobado!';
+                }
+                desc.textContent = res.descripcion;
 
-                setTimeout(() => { location.reload(); }, 2500);
+                setTimeout(() => { location.reload(); }, 3500);
 
             } catch (e) {
                 alert("Error al procesar la captura en el servidor.");
-                slotIframe.style.display = 'block';
-                slotFoto.style.display = 'none';
+                iframe.src = iframeSrc;
             } finally {
                 btn.textContent = "📸 Congelar y Escanear Componente";
                 btn.disabled = false;
@@ -246,7 +238,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('video-vivo').appendChild(document.getElementById('camara-wrapper'));
+            document.getElementById('video-vivo').prepend(document.getElementById('camara-wrapper'));
         });
 
         document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
@@ -274,7 +266,7 @@
                     const res = await response.json();
                     alert(res.message);
                     if (res.success) location.reload();
-                } catch (error) { alert('Error al conectar con el servidor.'); }
+                } catch (error) { alert('Error.'); }
             }
             if (event.target.classList.contains('btn-eliminar-usuario')) {
                 const idUsuario = event.target.getAttribute('data-id');
@@ -284,7 +276,7 @@
                     const res = await response.json();
                     alert(res.message);
                     if (res.success) location.reload();
-                } catch (error) { alert('Error al conectar.'); }
+                } catch (error) { alert('Error.'); }
             }
         });
     </script>
