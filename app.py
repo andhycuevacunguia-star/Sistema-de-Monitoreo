@@ -148,7 +148,6 @@ def subir_video():
     if session.get('rol') != 'admin':
         return jsonify({"success": False, "message": "No autorizado"})
     data = request.get_json()
-    titulo = data.get('titulo')
     url_video = data.get('url_video', '')
     
     embed_url = url_video
@@ -160,7 +159,7 @@ def subir_video():
         embed_url = f"https://www.youtube.com/embed/{video_id}"
 
     try:
-        supabase.table('Tutoriales').insert({'titulo': titulo, 'ruta_video': embed_url}).execute()
+        supabase.table('Tutoriales').insert({'titulo': 'Video Tutorial', 'ruta_video': embed_url}).execute()
         return jsonify({"success": True, "message": "Video subido correctamente"})
     except Exception as e:
         return jsonify({"success": False, "message": f"Error: {e}"})
