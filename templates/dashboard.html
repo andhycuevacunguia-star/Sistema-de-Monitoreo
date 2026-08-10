@@ -1,40 +1,46 @@
-¡Disculpa! Tienes toda la razón, se me pasaron las pestañas de administración de usuarios y tutoriales que tenía el panel de administrador originalmente.
-
-Aquí tienes el archivo **`dashboard.html` completo y restaurado**, con todas sus pestañas originales (incluyendo la gestión de usuarios si eres admin y los tutoriales), la cámara inteligente y el botón de escaneo para las pruebas con cartón que guarda las fallas directamente en la base de datos.
-
-Copia y pega este código completo en tu `dashboard.html`:
-
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Monitoreo - Mano Robótica</title>
+    <title>Sistema de Monitoreo</title>
     <style>
-        :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
-        body { font-family: sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
-        .header { background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
-        .tab-btn { background-color: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .tab-btn.active { background-color: var(--accent); color: white; border-color: var(--accent); }
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --accent: #06b6d4;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
+        .nav-tabs { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
+        .tab-btn { background-color: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 12px 22px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s ease; }
+        .tab-btn:hover { background-color: #2e3b55; color: var(--text-main); }
+        .tab-btn.active { background-color: var(--accent); color: #fff; border-color: var(--accent); }
+        .tab-btn.admin-btn { background-color: #7c2d12; border-color: #9a3412; }
+        .tab-btn.admin-btn.active { background-color: var(--danger); border-color: var(--danger); }
         .tab-content { display: none; background-color: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
         .tab-content.active { display: block; }
-        .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 10px; }
-        .video-card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; }
-        th { color: var(--accent); }
-        .btn-delete { background-color: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: #0f172a; color: var(--accent); }
+        .btn-delete { background-color: var(--danger); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-logout { color: #f87171; text-decoration: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        input[type="text"] { margin: 10px 0 20px 0; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-main); color: white; width: 100%; max-width: 400px; }
+        .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 12px; }
+        .video-card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; max-width: 650px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <h2 style="margin:0;">Sistema de Monitoreo</h2>
-            <p style="margin: 5px 0 0 0; color: var(--text-muted);">Usuario: <strong>{{ usuario }}</strong> | Rol: <strong>{{ rol }}</strong></p>
+            <h2 style="margin: 0 0 5px 0; color: #fff;">Sistema de Monitoreo - Mano Robótica</h2>
+            <p style="margin: 0; color: var(--text-muted);">Usuario: <strong style="color: var(--accent);">{{ usuario }}</strong> | Rol: <strong style="color: #38bdf8;">{{ rol }}</strong></p>
         </div>
-        <a href="/logout" style="color:var(--danger); font-weight: bold; text-decoration: none;">Cerrar Sesión</a>
+        <a href="/logout" class="btn-logout">Cerrar Sesión</a>
     </div>
 
     <!-- Pestañas de Navegación -->
@@ -43,84 +49,75 @@ Copia y pega este código completo en tu `dashboard.html`:
         <button class="tab-btn" onclick="switchTab('datos-sensores', this)">Datos de Sensores</button>
         <button class="tab-btn" onclick="switchTab('fallas-encontradas', this)">Fallas Encontradas</button>
         <button class="tab-btn" onclick="switchTab('videos-tutoriales', this)">Videos Tutoriales</button>
+        
         {% if rol == 'admin' %}
-        <button class="tab-btn" onclick="switchTab('gestionar-usuarios', this)">Gestionar Usuarios</button>
+            <button class="tab-btn admin-btn" onclick="switchTab('subir-videos', this)">Subir Videos</button>
+            <button class="tab-btn admin-btn" onclick="switchTab('eliminar-usuario', this)">Eliminar Usuario</button>
         {% endif %}
     </div>
 
-    <!-- Contenedor Único de la Cámara (Se mueve dinámicamente) -->
-    <div id="camara-wrapper" style="background-color: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
-        <h3 style="margin-top:0;">Transmisión ESP32-CAM</h3>
-        <div style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
-            <iframe src="http://10.63.198.252" style="width:420px; height:320px; border:none;" scrolling="no"></iframe>
+    <!-- CONTENEDOR GLOBAL DE LA CÁMARA (Único, para evitar errores de red en los iframes) -->
+    <div id="camara-wrapper" style="background-color: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
+        <h3 style="margin-bottom: 15px;">Transmisión de Video en Vivo (ESP32-CAM)</h3>
+        
+        <!-- Vista principal de la cámara con marco delgado y elegante -->
+        <div style="background-color: #000; width: 400px; height: 295px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); position: relative; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <iframe src="http://10.63.198.252" style="position: absolute; top: -5px; left: -10px; width: 420px; height: 320px; border: none;" scrolling="no"></iframe>
         </div>
+        <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
+            *Nota: Transmisión en tiempo real desde la red local.*
+        </p>
     </div>
 
-    <!-- 1. Pestaña Video en Vivo -->
-    <div id="video-vivo" class="tab-content active"></div>
+    <!-- CONTENIDO DE LAS PESTAÑAS -->
 
-    <!-- 2. Pestaña Sensores -->
-    <div id="datos-sensores" class="tab-content">
-        <h3>Lectura de Sensores</h3>
+    <!-- 1. Video en Vivo -->
+    <div id="video-vivo" class="tab-content active">
+        <!-- El visor de la cámara se mostrará aquí por defecto -->
+    </div>
+
+    <!-- 2. Datos de Sensores -->
+    <div id="datos-sensores" class="tab-content" style="display: none;">
+        <h3>Lectura de Datos de Sensores</h3>
         {% if sensores %}
             {% for s in sensores %}
-                <div class="sensor-card"><strong>{{ s.sensor_nombre }}</strong>: {{ s.valor }} <span style="float: right; color: var(--text-muted); font-size: 13px;">{{ s.created_at }}</span></div>
+            <div class="sensor-card">
+                <strong>{{ s.sensor_nombre }}</strong>: {{ s.valor }} 
+                <span style="float: right; color: #4ade80;">Estado: {{ s.estado }}</span>
+            </div>
             {% endfor %}
         {% else %}
-            <p style="color: var(--text-muted);">No hay registros de sensores aún.</p>
+            <p style="color: var(--text-muted); font-style: italic;">Esperando conexión del Arduino / ESP32...</p>
         {% endif %}
     </div>
 
-    <!-- 3. Pestaña Fallas Encontradas (Prueba de Cartón + Base de Datos) -->
-   <div id="fallas-encontradas" class="tab-content">
-    <h3>Detección Automática de Fallas</h3>
-    <div style="text-align: center; margin: 20px 0;">
-        <button id="btn-escanear" onclick="escanearFallasCamara()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px;">
-             Escanear Componente con Cámara
-        </button>
-    </div>
+    <!-- 3. Fallas Encontradas (Aquí también aparecerá la cámara y el reporte de diagnóstico) -->
+    <div id="fallas-encontradas" class="tab-content" style="display: none;">
+        <h3>Análisis y Detección de Defectos</h3>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px; justify-content: center; align-items: flex-start;">
+            
+            <!-- Contenedor donde se reubicará la cámara -->
+            <div id="camara-slot-fallas"></div>
 
-    <!-- Resultado del Análisis -->
-    <div id="resultado-diagnostico" style="padding:15px; border-radius:8px; margin-top:15px; display: none; max-width: 500px; margin-left: auto; margin-right: auto; text-align: left;">
-        <strong id="titulo-estado"></strong>
-        <p id="desc-estado" style="margin:5px 0 0 0; font-size: 13px;"></p>
-    </div>
+            <!-- Panel de Diagnóstico de la Tarjeta RAM -->
+            <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border); width: 320px; text-align: left;">
+                <h4 style="margin-bottom: 10px; color: var(--accent);">Diagnóstico por IA</h4>
+                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Estado actual del componente escaneado:</p>
+                
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                    <strong style="color: #10b981; display: block; margin-bottom: 4px;">✔ Estado: Componente Óptimo</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">No se detectan rayones profundos ni pistas cortadas en los circuitos impresos.</span>
+                </div>
 
-    <h3 style="margin-top: 30px;">Historial de Fallas Registradas</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Fecha / Hora</th>
-                <th>Componente</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if fallas %}
-                {% for f in fallas %}
-                <tr>
-                    <td>{{ f.created_at }}</td>
-                    <td>{{ f.componente }}</td>
-                    <td>{{ f.descripcion }}</td>
-                    <td><span style="color: #ef4444;">{{ f.estado }}</span></td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas registradas.</td></tr>
-            {% endif %}
-        </tbody>
-    </table>
-</div>
-        
-        <!-- Resultado del Análisis -->
-        <div id="resultado-diagnostico" style="background:rgba(16,185,129,0.1); border:1px solid #10b981; padding:15px; border-radius:8px; margin-top:15px; display: none; max-width: 450px; margin-left: auto; margin-right: auto; text-align: left;">
-            <strong id="titulo-estado" style="color:#10b981;">✔ Estado: Óptimo</strong>
-            <p id="desc-estado" style="margin:5px 0 0 0; color:var(--text-muted); font-size: 13px;"></p>
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 12px; border-radius: 8px; display: none;" id="alerta-fallas">
+                    <strong style="color: #ef4444; display: block; margin-bottom: 4px;">⚠ ¡Atención: Raya o Rayón Detectado!</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">Se identificó una irregularidad física en la superficie del circuito.</span>
+                </div>
+            </div>
         </div>
 
-        <!-- Tabla de Historial de Fallas (Supabase) -->
-        <h3 style="margin-top: 40px;">Historial de Fallas Registradas (Base de Datos)</h3>
+        <!-- Tabla original de fallas registradas -->
+        <h3 style="margin-top: 30px;">Historial de Fallas Registradas</h3>
         <table>
             <thead>
                 <tr>
@@ -134,72 +131,89 @@ Copia y pega este código completo en tu `dashboard.html`:
                 {% if fallas %}
                     {% for f in fallas %}
                     <tr>
-                        <td style="color: var(--text-muted);">{{ f.created_at }}</td>
+                        <td>{{ f.created_at }}</td>
                         <td>{{ f.componente }}</td>
                         <td>{{ f.descripcion }}</td>
-                        <td><span style="color: #ef4444; font-weight: bold;">{{ f.estado }}</span></td>
+                        <td><span style="color: #facc15;">{{ f.estado }}</span></td>
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas registradas en la base de datos.</td></tr>
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas recientes.</td></tr>
                 {% endif %}
             </tbody>
         </table>
     </div>
 
-    <!-- 4. Pestaña Tutoriales -->
-    <div id="videos-tutoriales" class="tab-content">
+    <!-- 4. Videos Tutoriales -->
+    <div id="videos-tutoriales" class="tab-content" style="display: none;">
         <h3>Videos Tutoriales</h3>
-        {% if rol == 'admin' %}
-        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
-            <h4>Subir Nuevo Video</h4>
-            <form id="form-subir-video">
-                <input type="text" id="video-titulo" placeholder="Título del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
-                <input type="url" id="video-url" placeholder="URL del video (ej: https://youtube.com/...)" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
-                <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
-            </form>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            {% if videos %}
+                {% for video in videos %}
+                    <div class="video-card">
+                        <h4 style="margin: 0 0 10px 0; color: var(--accent);">{{ video.titulo }}</h4>
+                        
+                        {% if 'youtube.com' in video.ruta_video or 'youtu.be' in video.ruta_video %}
+                            {% if 'youtu.be/' in video.ruta_video %}
+                                {% set yt_id = video.ruta_video.split('youtu.be/')[1].split('?')[0] %}
+                            {% else %}
+                                {% set yt_id = video.ruta_video.split('v=')[1].split('&')[0] %}
+                            {% endif %}
+                            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
+                                <iframe src="https://www.youtube.com/embed/{{ yt_id }}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                            </div>
+                        {% else %}
+                            <video controls width="100%" style="border-radius: 6px; max-height: 350px;">
+                                <source src="{{ video.ruta_video }}" type="video/mp4">
+                                Tu navegador no soporta la reproducción de video.
+                            </video>
+                        {% endif %}
+
+                        {% if rol == 'admin' %}
+                            <div style="margin-top: 12px; text-align: right;">
+                                <button class="btn-delete btn-eliminar-video" data-id="{{ video.id }}">Eliminar Video</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-muted); font-style: italic;">No hay videos tutoriales disponibles actualmente.</p>
+            {% endif %}
         </div>
-        {% endif %}
-        
-        {% if videos %}
-            {% for video in videos %}
-                <div class="video-card">
-                    <h4 style="margin: 0 0 10px 0;">{{ video.titulo }}</h4>
-                    <a href="{{ video.ruta_video }}" target="_blank" style="color: var(--accent);">Ver enlace del video</a>
-                    {% if rol == 'admin' %}
-                        <button class="btn-delete btn-eliminar-video" data-id="{{ video.id }}" style="float: right;">Eliminar</button>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        {% else %}
-            <p style="color: var(--text-muted);">No hay videos tutoriales disponibles.</p>
-        {% endif %}
     </div>
 
-    <!-- 5. Pestaña Gestionar Usuarios (Solo Admin) -->
     {% if rol == 'admin' %}
-    <div id="gestionar-usuarios" class="tab-content">
-        <h3>Gestión de Usuarios Registrados</h3>
+    <!-- 5. Subir Videos -->
+    <div id="subir-videos" class="tab-content" style="display: none;">
+        <h3>Subir Videos Tutoriales</h3>
+        <form id="form-subir-video">
+            <label>Título del Video:</label><br>
+            <input type="text" id="video-titulo" placeholder="Ej: Configuración inicial" required><br>
+            
+            <label>Enlace del Video (URL de YouTube o MP4):</label><br>
+            <input type="text" id="video-url" placeholder="https://youtu.be/..." required><br><br>
+            
+            <button type="submit" style="background-color: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Registrar Video</button>
+        </form>
+    </div>
+
+    <!-- 6. Eliminar Usuario -->
+    <div id="eliminar-usuario" class="tab-content" style="display: none;">
+        <h3>Gestión de Usuarios</h3>
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Usuario</th>
-                    <th>Rol</th>
-                    <th>Fecha Registro</th>
-                    <th>Acción</th>
+                    <th>ID</th><th>Usuario</th><th>Rol</th><th>Registro</th><th>Acción</th>
                 </tr>
             </thead>
             <tbody>
                 {% for u in usuarios %}
                 <tr>
                     <td>{{ u.id }}</td>
-                    <td>{{ u.usuario }}</td>
+                    <td><strong>{{ u.usuario }}</strong></td>
                     <td>{{ u.rol }}</td>
-                    <td style="color: var(--text-muted);">{{ u.created_at }}</td>
-                    <td>
-                        <button class="btn-delete btn-eliminar-usuario" data-id="{{ u.id }}">Eliminar</button>
-                    </td>
+                    <td>{{ u.created_at }}</td>
+                    <td><button class="btn-delete btn-eliminar-usuario" data-id="{{ u.id }}">Eliminar</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -208,76 +222,40 @@ Copia y pega este código completo en tu `dashboard.html`:
     {% endif %}
 
     <script>
-        // Gestión de Pestañas y Movimiento de Cámara
         function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            // 1. Ocultar todos los contenidos de pestañas
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.style.display = 'none');
+
+            // 2. Quitar la clase active a todos los botones
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // 3. Mostrar la pestaña seleccionada y activar su botón
             document.getElementById(tabId).style.display = 'block';
             btnElement.classList.add('active');
 
-            const cam = document.getElementById('camara-wrapper');
+            // 4. GESTIÓN INTELIGENTE DE LA CÁMARA (Solo visible en Video en Vivo y Fallas Encontradas)
+            const camWrapper = document.getElementById('camara-wrapper');
+            const videoVivoTab = document.getElementById('video-vivo');
+            const fallasSlot = document.getElementById('camara-slot-fallas');
+
             if (tabId === 'video-vivo') {
-                cam.style.display = 'block';
-                document.getElementById('video-vivo').appendChild(cam);
+                camWrapper.style.display = 'block';
+                videoVivoTab.appendChild(camWrapper);
             } else if (tabId === 'fallas-encontradas') {
-                cam.style.display = 'block';
-                document.getElementById('camara-slot-fallas').appendChild(cam);
+                camWrapper.style.display = 'block';
+                fallasSlot.appendChild(camWrapper);
             } else {
-                cam.style.display = 'none';
+                camWrapper.style.display = 'none';
             }
         }
 
-        // Lógica del botón de escaneo y guardado en Base de Datos
-       async function escanearFallasCamara() {
-    const btn = document.getElementById('btn-escanear');
-    const cont = document.getElementById('resultado-diagnostico');
-    const tit = document.getElementById('titulo-estado');
-    const desc = document.getElementById('desc-estado');
-
-    btn.textContent = "Analizando imagen de la cámara...";
-    btn.disabled = true;
-
-    try {
-        // Petición al servidor para capturar y analizar el frame actual del ESP32-CAM
-        const response = await fetch('/api/analizar_camara', { method: 'POST' });
-        const data = await response.json();
-        
-        cont.style.display = 'block';
-
-        if (data.estado === 'normal') {
-            cont.style.background = 'rgba(16,185,129,0.1)'; cont.style.border = '1px solid #10b981';
-            tit.style.color = '#10b981'; tit.textContent = '✔ Estado: Óptimo (Sin Fallas)';
-            desc.textContent = 'El componente / cartón se encuentra en condiciones correctas.';
-        } else if (data.estado === 'vacio') {
-            cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
-            tit.style.color = '#ef4444'; tit.textContent = '❌ Alerta: Coloque un componente';
-            desc.textContent = 'No se detecta ningún cartón o componente frente a la cámara.';
-        } else {
-            cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
-            tit.style.color = '#ef4444'; tit.textContent = '⚠ ¡Falla Detectada en el Cartón!';
-            desc.textContent = data.descripcion || 'Se detectaron arrugas, roturas o irregularidades.';
-            
-            // Recarga para mostrar la falla guardada en Supabase inmediatamente abajo
-            setTimeout(() => { location.reload(); }, 2000);
-        }
-    } catch (e) {
-        alert("Error al conectar con el sistema de visión.");
-    } finally {
-        btn.textContent = "📸 Escanear Componente con Cámara";
-        btn.disabled = false;
-    }
-}
-
-        // Inicializar la cámara en la pestaña Video en Vivo por defecto
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('video-vivo').appendChild(document.getElementById('camara-wrapper'));
-        });
-
-        // Funciones de administración (Subir y eliminar videos / usuarios)
         document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
             e.preventDefault();
             const titulo = document.getElementById('video-titulo').value;
             const url_video = document.getElementById('video-url').value;
+
             try {
                 const response = await fetch('/api/subir_video', {
                     method: 'POST',
@@ -287,32 +265,50 @@ Copia y pega este código completo en tu `dashboard.html`:
                 const res = await response.json();
                 alert(res.message);
                 if (res.success) location.reload();
-            } catch (error) { alert('Error al conectar con el servidor.'); }
+            } catch (error) {
+                alert('Error al conectar con el servidor.');
+            }
         });
 
+        // Eliminar video
         document.addEventListener('click', async function(event) {
             if (event.target.classList.contains('btn-eliminar-video')) {
                 const idVideo = event.target.getAttribute('data-id');
                 if (!confirm('¿Estás seguro de eliminar este video?')) return;
+
                 try {
                     const response = await fetch(`/eliminar_video/${idVideo}`, { method: 'DELETE' });
                     const res = await response.json();
                     alert(res.message);
                     if (res.success) location.reload();
-                } catch (error) { alert('Error al conectar con el servidor.'); }
+                } catch (error) {
+                    alert('Error al conectar con el servidor.');
+                }
             }
+
+            // Eliminar usuario
             if (event.target.classList.contains('btn-eliminar-usuario')) {
                 const idUsuario = event.target.getAttribute('data-id');
                 if (!confirm(`¿Eliminar usuario ID ${idUsuario}?`)) return;
+
                 try {
                     const response = await fetch(`/eliminar_usuario/${idUsuario}`, { method: 'DELETE' });
                     const res = await response.json();
                     alert(res.message);
                     if (res.success) location.reload();
-                } catch (error) { alert('Error al conectar.'); }
+                } catch (error) {
+                    alert('Error al conectar.');
+                }
             }
+
+            
         });
+
+        // Al cargar la página, mover la cámara a la pestaña activa por defecto (Video en Vivo)
+document.addEventListener('DOMContentLoaded', function() {
+    const camWrapper = document.getElementById('camara-wrapper');
+    document.getElementById('video-vivo').appendChild(camWrapper);
+});
     </script>
 </body>
 </html>
-
