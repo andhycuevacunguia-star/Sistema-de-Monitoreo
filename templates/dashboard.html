@@ -1,12 +1,19 @@
+¡Disculpa! Tienes toda la razón, se me pasaron las pestañas de administración de usuarios y tutoriales que tenía el panel de administrador originalmente.
+
+Aquí tienes el archivo **`dashboard.html` completo y restaurado**, con todas sus pestañas originales (incluyendo la gestión de usuarios si eres admin y los tutoriales), la cámara inteligente y el botón de escaneo para las pruebas con cartón que guarda las fallas directamente en la base de datos.
+
+Copia y pega este código completo en tu `dashboard.html`:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Monitoreo</title>
+    <title>Sistema de Monitoreo - Mano Robótica</title>
     <style>
         :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
         body { font-family: sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
-        .header { background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .header { background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
         .tab-btn { background-color: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .tab-btn.active { background-color: var(--accent); color: white; border-color: var(--accent); }
@@ -14,6 +21,10 @@
         .tab-content.active { display: block; }
         .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 10px; }
         .video-card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px; }
+        th { color: var(--accent); }
+        .btn-delete { background-color: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -21,105 +32,164 @@
     <div class="header">
         <div>
             <h2 style="margin:0;">Sistema de Monitoreo</h2>
-            <p>Usuario: <strong>{{ usuario }}</strong> | Rol: <strong>{{ rol }}</strong></p>
+            <p style="margin: 5px 0 0 0; color: var(--text-muted);">Usuario: <strong>{{ usuario }}</strong> | Rol: <strong>{{ rol }}</strong></p>
         </div>
-        <a href="/logout" style="color:var(--danger);">Cerrar Sesión</a>
+        <a href="/logout" style="color:var(--danger); font-weight: bold; text-decoration: none;">Cerrar Sesión</a>
     </div>
 
+    <!-- Pestañas de Navegación -->
     <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('video-vivo', this)">Video en Vivo</button>
         <button class="tab-btn" onclick="switchTab('datos-sensores', this)">Datos de Sensores</button>
         <button class="tab-btn" onclick="switchTab('fallas-encontradas', this)">Fallas Encontradas</button>
         <button class="tab-btn" onclick="switchTab('videos-tutoriales', this)">Videos Tutoriales</button>
+        {% if rol == 'admin' %}
+        <button class="tab-btn" onclick="switchTab('gestionar-usuarios', this)">Gestionar Usuarios</button>
+        {% endif %}
     </div>
 
-    <!-- Cámara (Se moverá entre pestañas) -->
+    <!-- Contenedor Único de la Cámara (Se mueve dinámicamente) -->
     <div id="camara-wrapper" style="background-color: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
-        <h3>Transmisión</h3>
+        <h3 style="margin-top:0;">Transmisión ESP32-CAM</h3>
         <div style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
             <iframe src="http://10.63.198.252" style="width:420px; height:320px; border:none;" scrolling="no"></iframe>
         </div>
     </div>
 
+    <!-- 1. Pestaña Video en Vivo -->
     <div id="video-vivo" class="tab-content active"></div>
 
+    <!-- 2. Pestaña Sensores -->
     <div id="datos-sensores" class="tab-content">
         <h3>Lectura de Sensores</h3>
-        {% for s in sensores %}
-            <div class="sensor-card"><strong>{{ s.sensor_nombre }}</strong>: {{ s.valor }}</div>
-        {% endfor %}
+        {% if sensores %}
+            {% for s in sensores %}
+                <div class="sensor-card"><strong>{{ s.sensor_nombre }}</strong>: {{ s.valor }} <span style="float: right; color: var(--text-muted); font-size: 13px;">{{ s.created_at }}</span></div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-muted);">No hay registros de sensores aún.</p>
+        {% endif %}
     </div>
 
-   <div id="fallas-encontradas" class="tab-content">
-    <h3>Diagnóstico del Componente (Prueba con Cartón)</h3>
-    <div id="camara-slot-fallas"></div>
-    
-    <!-- Selector manual para la prueba (simula lo que ve la cámara) -->
-    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid var(--border); max-width: 450px; margin-left: auto; margin-right: auto; text-align: left;">
-        <label style="font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 8px;">Simular estado actual del cartón frente a la cámara:</label>
-        <select id="select-estado-prueba" style="width: 100%; padding: 10px; border-radius: 6px; background: var(--bg-main); color: white; border: 1px solid var(--border); margin-bottom: 12px;">
-            <option value="normal">Cartón en buen estado (Sin fallas)</option>
-            <option value="arrugado">Cartón arrugado / rayado</option>
-            <option value="roto">Cartón roto</option>
-            <option value="faltante">Le falta una parte al cartón</option>
-            <option value="vacio">No hay ningún cartón (Vacío)</option>
-        </select>
+    <!-- 3. Pestaña Fallas Encontradas (Prueba de Cartón + Base de Datos) -->
+    <div id="fallas-encontradas" class="tab-content">
+        <h3>Diagnóstico del Componente (Prueba con Cartón)</h3>
+        <div id="camara-slot-fallas"></div>
         
-        <div style="text-align: center;">
-            <button id="btn-escanear" onclick="escanearCarton()" style="background: var(--accent); color: white; border: none; padding: 10px 22px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">
-                 Analizar y Guardar en Base de Datos
-            </button>
+        <!-- Simulador de Estado (Para tu prueba actual con la cámara) -->
+        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; margin: 20px auto; border: 1px solid var(--border); max-width: 450px; text-align: left;">
+            <label style="font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 8px;">Simular estado actual del cartón frente a la cámara:</label>
+            <select id="select-estado-prueba" style="width: 100%; padding: 10px; border-radius: 6px; background: var(--bg-main); color: white; border: 1px solid var(--border); margin-bottom: 15px;">
+                <option value="normal">Cartón en buen estado (Sin fallas)</option>
+                <option value="arrugado">Cartón arrugado / rayado</option>
+                <option value="roto">Cartón roto</option>
+                <option value="faltante">Le falta una parte al cartón</option>
+                <option value="vacio">No hay ningún cartón (Vacío)</option>
+            </select>
+            
+            <div style="text-align: center;">
+                <button id="btn-escanear" onclick="escanearCarton()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 15px;">
+                     Escanear y Guardar en Base de Datos
+                </button>
+            </div>
         </div>
-    </div>
-    
-    <!-- Resultado Dinámico -->
-    <div id="resultado-diagnostico" style="background:rgba(16,185,129,0.1); border:1px solid #10b981; padding:15px; border-radius:8px; margin-top:15px; display: none; max-width: 450px; margin-left: auto; margin-right: auto; text-align: left;">
-        <strong id="titulo-estado" style="color:#10b981;">✔ Estado: Óptimo</strong>
-        <p id="desc-estado" style="margin:5px 0 0 0; color:var(--text-muted); font-size: 13px;"></p>
+        
+        <!-- Resultado del Análisis -->
+        <div id="resultado-diagnostico" style="background:rgba(16,185,129,0.1); border:1px solid #10b981; padding:15px; border-radius:8px; margin-top:15px; display: none; max-width: 450px; margin-left: auto; margin-right: auto; text-align: left;">
+            <strong id="titulo-estado" style="color:#10b981;">✔ Estado: Óptimo</strong>
+            <p id="desc-estado" style="margin:5px 0 0 0; color:var(--text-muted); font-size: 13px;"></p>
+        </div>
+
+        <!-- Tabla de Historial de Fallas (Supabase) -->
+        <h3 style="margin-top: 40px;">Historial de Fallas Registradas (Base de Datos)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha / Hora</th>
+                    <th>Componente</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if fallas %}
+                    {% for f in fallas %}
+                    <tr>
+                        <td style="color: var(--text-muted);">{{ f.created_at }}</td>
+                        <td>{{ f.componente }}</td>
+                        <td>{{ f.descripcion }}</td>
+                        <td><span style="color: #ef4444; font-weight: bold;">{{ f.estado }}</span></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas registradas en la base de datos.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
     </div>
 
-    <!-- Historial de Fallas de la Base de Datos -->
-    <h3 style="margin-top: 35px;">Historial de Fallas Registradas (Supabase)</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Fecha / Hora</th>
-                <th>Componente</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if fallas %}
-                {% for f in fallas %}
+    <!-- 4. Pestaña Tutoriales -->
+    <div id="videos-tutoriales" class="tab-content">
+        <h3>Videos Tutoriales</h3>
+        {% if rol == 'admin' %}
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
+            <h4>Subir Nuevo Video</h4>
+            <form id="form-subir-video">
+                <input type="text" id="video-titulo" placeholder="Título del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="url" id="video-url" placeholder="URL del video (ej: https://youtube.com/...)" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
+            </form>
+        </div>
+        {% endif %}
+        
+        {% if videos %}
+            {% for video in videos %}
+                <div class="video-card">
+                    <h4 style="margin: 0 0 10px 0;">{{ video.titulo }}</h4>
+                    <a href="{{ video.ruta_video }}" target="_blank" style="color: var(--accent);">Ver enlace del video</a>
+                    {% if rol == 'admin' %}
+                        <button class="btn-delete btn-eliminar-video" data-id="{{ video.id }}" style="float: right;">Eliminar</button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-muted);">No hay videos tutoriales disponibles.</p>
+        {% endif %}
+    </div>
+
+    <!-- 5. Pestaña Gestionar Usuarios (Solo Admin) -->
+    {% if rol == 'admin' %}
+    <div id="gestionar-usuarios" class="tab-content">
+        <h3>Gestión de Usuarios Registrados</h3>
+        <table>
+            <thead>
                 <tr>
-                    <td>{{ f.created_at }}</td>
-                    <td>{{ f.componente }}</td>
-                    <td>{{ f.descripcion }}</td>
-                    <td><span style="color: #ef4444;">{{ f.estado }}</span></td>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Fecha Registro</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.usuario }}</td>
+                    <td>{{ u.rol }}</td>
+                    <td style="color: var(--text-muted);">{{ u.created_at }}</td>
+                    <td>
+                        <button class="btn-delete btn-eliminar-usuario" data-id="{{ u.id }}">Eliminar</button>
+                    </td>
                 </tr>
                 {% endfor %}
-            {% else %}
-                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas registradas aún.</td></tr>
-            {% endif %}
-        </tbody>
-    </table>
-</div>
-        
-        <div id="resultado-diagnostico" style="background:rgba(16,185,129,0.1); border:1px solid #10b981; padding:20px; border-radius:8px; margin-top:20px; display: none;">
-            <strong id="titulo-estado" style="color:#10b981;">✔ Estado: Óptimo (Normal)</strong>
-            <p id="desc-estado" style="margin:5px 0 0 0; color:var(--text-muted);">El cartón no presenta rayones, roturas ni faltantes.</p>
-        </div>
+            </tbody>
+        </table>
     </div>
-
-    <div id="videos-tutoriales" class="tab-content">
-        <h3>Tutoriales</h3>
-        {% for video in videos %}
-            <div class="video-card"><h4>{{ video.titulo }}</h4></div>
-        {% endfor %}
-    </div>
+    {% endif %}
 
     <script>
+        // Gestión de Pestañas y Movimiento de Cámara
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -127,67 +197,116 @@
             btnElement.classList.add('active');
 
             const cam = document.getElementById('camara-wrapper');
-            if (tabId === 'video-vivo') document.getElementById('video-vivo').appendChild(cam);
-            else if (tabId === 'fallas-encontradas') document.getElementById('camara-slot-fallas').appendChild(cam);
-            else cam.style.display = 'none';
-            if (tabId === 'video-vivo' || tabId === 'fallas-encontradas') cam.style.display = 'block';
-        }
-
-       async function escanearCarton() {
-    const estadoSeleccionado = document.getElementById('select-estado-prueba').value;
-    const btn = document.getElementById('btn-escanear');
-    const cont = document.getElementById('resultado-diagnostico');
-    const tit = document.getElementById('titulo-estado');
-    const desc = document.getElementById('desc-estado');
-
-    btn.textContent = "Analizando componente...";
-    btn.disabled = true;
-
-    try {
-        // Enviamos el estado seleccionado a Flask para que lo procese y guarde si es falla
-        const response = await fetch('/api/detectar_fallas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: estadoSeleccionado })
-        });
-        const data = await response.json();
-        
-        cont.style.display = 'block';
-
-        if (data.estado === 'normal') {
-            cont.style.background = 'rgba(16,185,129,0.1)'; cont.style.border = '1px solid #10b981';
-            tit.style.color = '#10b981'; tit.textContent = '✔ Estado: Óptimo';
-            desc.textContent = 'El cartón está en condiciones óptimas. No se detectan fallas.';
-        } else {
-            cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
-            tit.style.color = '#ef4444';
-            
-            if (data.estado === 'arrugado') {
-                tit.textContent = '⚠ ¡Falla Detectada: Cartón Arrugado / Rayado!';
-                desc.textContent = 'Se identificaron irregularidades superficiales en el material.';
-            } else if (data.estado === 'roto') {
-                tit.textContent = '⚠ ¡Falla Detectada: Cartón Roto!';
-                desc.textContent = 'Se detectó una ruptura en la estructura del componente.';
-            } else if (data.estado === 'faltante') {
-                tit.textContent = '⚠ ¡Falla Detectada: Parte Faltante!';
-                desc.textContent = 'El componente está incompleto.';
-            } else if (data.estado === 'vacio') {
-                tit.textContent = '❌ ¡Alerta: Componente no detectado!';
-                desc.textContent = 'Por favor, coloque un componente frente a la cámara.';
+            if (tabId === 'video-vivo') {
+                cam.style.display = 'block';
+                document.getElementById('video-vivo').appendChild(cam);
+            } else if (tabId === 'fallas-encontradas') {
+                cam.style.display = 'block';
+                document.getElementById('camara-slot-fallas').appendChild(cam);
+            } else {
+                cam.style.display = 'none';
             }
-            
-            // Recargamos la página después de 2 segundos para que aparezca en la tabla de abajo automáticamente
-            setTimeout(() => { location.reload(); }, 2000);
         }
-    } catch (e) {
-        alert("Error al conectar con el servidor.");
-    } finally {
-        btn.textContent = " Analizar y Guardar en Base de Datos";
-        btn.disabled = false;
-    }
-}
 
-        document.addEventListener('DOMContentLoaded', () => document.getElementById('video-vivo').appendChild(document.getElementById('camara-wrapper')));
+        // Lógica del botón de escaneo y guardado en Base de Datos
+        async function escanearCarton() {
+            const estadoSeleccionado = document.getElementById('select-estado-prueba').value;
+            const btn = document.getElementById('btn-escanear');
+            const cont = document.getElementById('resultado-diagnostico');
+            const tit = document.getElementById('titulo-estado');
+            const desc = document.getElementById('desc-estado');
+
+            btn.textContent = "Analizando componente...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/detectar_fallas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: estadoSeleccionado })
+                });
+                const data = await response.json();
+                
+                cont.style.display = 'block';
+
+                if (data.estado === 'normal') {
+                    cont.style.background = 'rgba(16,185,129,0.1)'; cont.style.border = '1px solid #10b981';
+                    tit.style.color = '#10b981'; tit.textContent = '✔ Estado: Óptimo';
+                    desc.textContent = 'El cartón está en condiciones óptimas. No se detectan fallas.';
+                } else {
+                    cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
+                    tit.style.color = '#ef4444';
+                    
+                    if (data.estado === 'arrugado') {
+                        tit.textContent = '⚠ ¡Falla Detectada: Cartón Arrugado / Rayado!';
+                        desc.textContent = 'Se identificaron irregularidades superficiales en el material.';
+                    } else if (data.estado === 'roto') {
+                        tit.textContent = '⚠ ¡Falla Detectada: Cartón Roto!';
+                        desc.textContent = 'Se detectó una ruptura en la estructura del componente.';
+                    } else if (data.estado === 'faltante') {
+                        tit.textContent = '⚠ ¡Falla Detectada: Parte Faltante!';
+                        desc.textContent = 'El componente está incompleto.';
+                    } else if (data.estado === 'vacio') {
+                        tit.textContent = '❌ ¡Alerta: Componente no detectado!';
+                        desc.textContent = 'Por favor, coloque un componente frente a la cámara.';
+                    }
+                    
+                    // Recarga automática para que la falla aparezca al instante en la tabla inferior
+                    setTimeout(() => { location.reload(); }, 2000);
+                }
+            } catch (e) {
+                alert("Error al conectar con el servidor.");
+            } finally {
+                btn.textContent = "📸 Escanear y Guardar en Base de Datos";
+                btn.disabled = false;
+            }
+        }
+
+        // Inicializar la cámara en la pestaña Video en Vivo por defecto
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('video-vivo').appendChild(document.getElementById('camara-wrapper'));
+        });
+
+        // Funciones de administración (Subir y eliminar videos / usuarios)
+        document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const titulo = document.getElementById('video-titulo').value;
+            const url_video = document.getElementById('video-url').value;
+            try {
+                const response = await fetch('/api/subir_video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, url_video })
+                });
+                const res = await response.json();
+                alert(res.message);
+                if (res.success) location.reload();
+            } catch (error) { alert('Error al conectar con el servidor.'); }
+        });
+
+        document.addEventListener('click', async function(event) {
+            if (event.target.classList.contains('btn-eliminar-video')) {
+                const idVideo = event.target.getAttribute('data-id');
+                if (!confirm('¿Estás seguro de eliminar este video?')) return;
+                try {
+                    const response = await fetch(`/eliminar_video/${idVideo}`, { method: 'DELETE' });
+                    const res = await response.json();
+                    alert(res.message);
+                    if (res.success) location.reload();
+                } catch (error) { alert('Error al conectar con el servidor.'); }
+            }
+            if (event.target.classList.contains('btn-eliminar-usuario')) {
+                const idUsuario = event.target.getAttribute('data-id');
+                if (!confirm(`¿Eliminar usuario ID ${idUsuario}?`)) return;
+                try {
+                    const response = await fetch(`/eliminar_usuario/${idUsuario}`, { method: 'DELETE' });
+                    const res = await response.json();
+                    alert(res.message);
+                    if (res.success) location.reload();
+                } catch (error) { alert('Error al conectar.'); }
+            }
+        });
     </script>
 </body>
 </html>
+
