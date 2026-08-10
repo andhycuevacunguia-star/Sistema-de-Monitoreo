@@ -7,9 +7,9 @@ from supabase import create_client, Client
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_super_segura'
 
-# Configuración de Supabase (reemplaza con tus credenciales si es necesario)
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "TU_SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "TU_SUPABASE_KEY")
+# Configuración de Supabase con tus credenciales reales
+SUPABASE_URL = "https://mdekqtmpttchanmllzus.supabase.co"
+SUPABASE_KEY = "sb_publishable_A7yLQoU_B6spnL1NPCARVg_htc3C39n"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/')
@@ -92,7 +92,7 @@ def dashboard():
                            videos=videos,
                            usuarios=usuarios)
 
-# --- NUEVA RUTA PARA GUARDAR LAS FALLAS DESDE EL JS ---
+# Ruta para guardar las fallas desde el navegador al congelar y escanear
 @app.route('/api/detectar_fallas', methods=['POST'])
 def detectar_fallas():
     data = request.get_json()
