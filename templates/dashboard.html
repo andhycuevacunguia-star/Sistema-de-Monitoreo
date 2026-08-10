@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Monitoreo </title>
+    <title>Sistema de Monitoreo - Mano Robótica</title>
     <style>
         :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
         body { font-family: sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
@@ -40,11 +40,11 @@
         {% endif %}
     </div>
 
-    <!-- Contenedor Único de la Cámara (Se mueve dinámicamente) -->
+    <!-- Contenedor Único de la Cámara con la IP corregida -->
     <div id="camara-wrapper" style="background-color: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
         <h3 style="margin-top:0;">Transmisión ESP32-CAM</h3>
         <div style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
-            <iframe src="http://10.63.198.252" style="width:420px; height:320px; border:none;" scrolling="no"></iframe>
+            <iframe src="http://192.168.101.27" style="width:420px; height:320px; border:none;" scrolling="no"></iframe>
         </div>
     </div>
 
@@ -67,12 +67,9 @@
     <div id="fallas-encontradas" class="tab-content">
         <h3>Detección Inteligente de Fallas (Captura de Imagen)</h3>
         
-        <!-- Contenedor donde la cámara y la foto congelada se alternarán -->
         <div id="contenedor-visual-camara" style="text-align: center; margin-bottom: 15px;">
             <div id="slot-iframe-camara" style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
-                <!-- El iframe se moverá aquí dinámicamente -->
             </div>
-            <!-- Aquí se mostrará la "foto congelada" al escanear -->
             <div id="slot-foto-congelada" style="display:none; width:400px; height:295px; border-radius:10px; margin:0 auto; border:1px solid var(--accent); background: #000; position: relative; align-items: center; justify-content: center;">
                 <div style="color: var(--accent); font-weight: bold; position: absolute; bottom: 10px; background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 4px; font-size: 12px;">📸 Imagen congelada para análisis</div>
             </div>
@@ -84,7 +81,6 @@
            </button>
         </div>
 
-        <!-- Resultado del Análisis -->
         <div id="resultado-diagnostico" style="padding:15px; border-radius:8px; margin-top:15px; display: none; max-width: 500px; margin-left: auto; margin-right: auto; text-align: left;">
             <strong id="titulo-estado"></strong>
             <p id="desc-estado" style="margin:5px 0 0 0; font-size: 13px;"></p>
@@ -126,7 +122,7 @@
             <h4>Subir Nuevo Video</h4>
             <form id="form-subir-video">
                 <input type="text" id="video-titulo" placeholder="Título del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
-                <input type="url" id="video-url" placeholder="URL del video (ej: https://youtube.com/...)" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="url" id="video-url" placeholder="URL del video (ej: https://www.youtube.com/watch?v=...)" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
                 <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
             </form>
         </div>
@@ -183,7 +179,6 @@
     {% endif %}
 
     <script>
-      // Gestión de Pestañas y Movimiento de Cámara
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -204,7 +199,6 @@
             }
         }
 
-        // Lógica para congelar la cámara, analizar y guardar en Supabase
         async function congelarYAnalizarFalla() {
             const btn = document.getElementById('btn-escanear');
             const cont = document.getElementById('resultado-diagnostico');
@@ -251,12 +245,10 @@
             }
         }
 
-        // Inicializar la cámara en la pestaña Video en Vivo por defecto
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('video-vivo').appendChild(document.getElementById('camara-wrapper'));
         });
 
-        // Funciones de administración (Subir y eliminar videos / usuarios)
         document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
             e.preventDefault();
             const titulo = document.getElementById('video-titulo').value;
