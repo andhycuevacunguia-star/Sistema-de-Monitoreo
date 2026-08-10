@@ -153,6 +153,7 @@ def detectar_fallas():
         print(f"Error de vision: {e}")
         descripcion = "Error al escanear el componente."
         estado_texto = "Error"
+        estado_resultado = "error"
 
     try:
         supabase.table('Alertas_Fallas').insert({
