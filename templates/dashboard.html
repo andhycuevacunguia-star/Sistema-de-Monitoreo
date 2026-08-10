@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Monitoreo - Mano Robótica</title>
+    <title>Sistema de Monitoreo</title>
     <style>
         :root {
             --bg-main: #0f172a;
@@ -28,7 +28,6 @@
         th { background-color: #0f172a; color: var(--accent); }
         .btn-delete { background-color: var(--danger); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .btn-logout { color: #f87171; text-decoration: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .video-container { background-color: #000; width: 100%; max-width: 700px; height: 400px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); color: var(--text-muted); }
         input[type="text"] { margin: 10px 0 20px 0; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-main); color: white; width: 100%; max-width: 400px; }
         .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 12px; }
         .video-card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; max-width: 650px; }
@@ -44,30 +43,41 @@
         <a href="/logout" class="btn-logout">Cerrar Sesión</a>
     </div>
 
+    <!-- Pestañas de Navegación -->
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="openTab('camara-vivo', this)">Video en Vivo</button>
-        <button class="tab-btn" onclick="openTab('datos-sensores', this)">Datos de Sensores</button>
-        <button class="tab-btn" onclick="openTab('fallas-encontradas', this)">Fallas Encontradas</button>
-        <button class="tab-btn" onclick="openTab('videos-tutoriales', this)">Videos Tutoriales</button>
+        <button class="tab-btn active" onclick="switchTab('video-vivo', this)">Video en Vivo</button>
+        <button class="tab-btn" onclick="switchTab('datos-sensores', this)">Datos de Sensores</button>
+        <button class="tab-btn" onclick="switchTab('fallas-encontradas', this)">Fallas Encontradas</button>
+        <button class="tab-btn" onclick="switchTab('videos-tutoriales', this)">Videos Tutoriales</button>
         
         {% if rol == 'admin' %}
-            <button class="tab-btn admin-btn" onclick="openTab('subir-videos', this)">Subir Videos</button>
-            <button class="tab-btn admin-btn" onclick="openTab('eliminar-usuario', this)">Eliminar Usuario</button>
+            <button class="tab-btn admin-btn" onclick="switchTab('subir-videos', this)">Subir Videos</button>
+            <button class="tab-btn admin-btn" onclick="switchTab('eliminar-usuario', this)">Eliminar Usuario</button>
         {% endif %}
     </div>
 
-<div id="camara-vivo" class="tab-content active" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-        <h3>Transmisión de Video en Vivo (ESP32-CAM)</h3>
-        <!-- Contenedor ajustado a la medida exacta del video con un borde negro delgado y simétrico -->
+    <!-- CONTENEDOR GLOBAL DE LA CÁMARA (Único, para evitar errores de red en los iframes) -->
+    <div id="camara-wrapper" style="background-color: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
+        <h3 style="margin-bottom: 15px;">Transmisión de Video en Vivo (ESP32-CAM)</h3>
+        
+        <!-- Vista principal de la cámara con marco delgado y elegante -->
         <div style="background-color: #000; width: 400px; height: 295px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); position: relative; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-            <!-- Iframe posicionado para que el video llene perfectamente el cuadro y deje un marco delgado estético -->
             <iframe src="http://10.63.198.252" style="position: absolute; top: -5px; left: -10px; width: 420px; height: 320px; border: none;" scrolling="no"></iframe>
         </div>
         <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
-            
+            *Nota: Transmisión en tiempo real desde la red local.*
         </p>
     </div>
-    <div id="datos-sensores" class="tab-content">
+
+    <!-- CONTENIDO DE LAS PESTAÑAS -->
+
+    <!-- 1. Video en Vivo -->
+    <div id="video-vivo" class="tab-content active">
+        <!-- El visor de la cámara se mostrará aquí por defecto -->
+    </div>
+
+    <!-- 2. Datos de Sensores -->
+    <div id="datos-sensores" class="tab-content" style="display: none;">
         <h3>Lectura de Datos de Sensores</h3>
         {% if sensores %}
             {% for s in sensores %}
@@ -81,8 +91,33 @@
         {% endif %}
     </div>
 
-    <div id="fallas-encontradas" class="tab-content">
-        <h3>Diagnóstico y Registro de Fallas</h3>
+    <!-- 3. Fallas Encontradas (Aquí también aparecerá la cámara y el reporte de diagnóstico) -->
+    <div id="fallas-encontradas" class="tab-content" style="display: none;">
+        <h3>Análisis y Detección de Defectos</h3>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px; justify-content: center; align-items: flex-start;">
+            
+            <!-- Contenedor donde se reubicará la cámara -->
+            <div id="camara-slot-fallas"></div>
+
+            <!-- Panel de Diagnóstico de la Tarjeta RAM -->
+            <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border); width: 320px; text-align: left;">
+                <h4 style="margin-bottom: 10px; color: var(--accent);">Diagnóstico por IA</h4>
+                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Estado actual del componente escaneado:</p>
+                
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                    <strong style="color: #10b981; display: block; margin-bottom: 4px;">✔ Estado: Componente Óptimo</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">No se detectan rayones profundos ni pistas cortadas en los circuitos impresos.</span>
+                </div>
+
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 12px; border-radius: 8px; display: none;" id="alerta-fallas">
+                    <strong style="color: #ef4444; display: block; margin-bottom: 4px;">⚠ ¡Atención: Raya o Rayón Detectado!</strong>
+                    <span style="font-size: 13px; color: var(--text-muted);">Se identificó una irregularidad física en la superficie del circuito.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla original de fallas registradas -->
+        <h3 style="margin-top: 30px;">Historial de Fallas Registradas</h3>
         <table>
             <thead>
                 <tr>
@@ -109,7 +144,8 @@
         </table>
     </div>
 
-    <div id="videos-tutoriales" class="tab-content">
+    <!-- 4. Videos Tutoriales -->
+    <div id="videos-tutoriales" class="tab-content" style="display: none;">
         <h3>Videos Tutoriales</h3>
         <div style="display: flex; flex-direction: column; gap: 20px;">
             {% if videos %}
@@ -117,7 +153,6 @@
                     <div class="video-card">
                         <h4 style="margin: 0 0 10px 0; color: var(--accent);">{{ video.titulo }}</h4>
                         
-                        <!-- Miniatura / Reproductor Automático para YouTube -->
                         {% if 'youtube.com' in video.ruta_video or 'youtu.be' in video.ruta_video %}
                             {% if 'youtu.be/' in video.ruta_video %}
                                 {% set yt_id = video.ruta_video.split('youtu.be/')[1].split('?')[0] %}
@@ -148,7 +183,8 @@
     </div>
 
     {% if rol == 'admin' %}
-    <div id="subir-videos" class="tab-content">
+    <!-- 5. Subir Videos -->
+    <div id="subir-videos" class="tab-content" style="display: none;">
         <h3>Subir Videos Tutoriales</h3>
         <form id="form-subir-video">
             <label>Título del Video:</label><br>
@@ -161,7 +197,8 @@
         </form>
     </div>
 
-    <div id="eliminar-usuario" class="tab-content">
+    <!-- 6. Eliminar Usuario -->
+    <div id="eliminar-usuario" class="tab-content" style="display: none;">
         <h3>Gestión de Usuarios</h3>
         <table>
             <thead>
@@ -185,11 +222,33 @@
     {% endif %}
 
     <script>
-        function openTab(tabId, element) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            element.classList.add('active');
+        function switchTab(tabId, btnElement) {
+            // 1. Ocultar todos los contenidos de pestañas
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.style.display = 'none');
+
+            // 2. Quitar la clase active a todos los botones
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // 3. Mostrar la pestaña seleccionada y activar su botón
+            document.getElementById(tabId).style.display = 'block';
+            btnElement.classList.add('active');
+
+            // 4. GESTIÓN INTELIGENTE DE LA CÁMARA (Solo visible en Video en Vivo y Fallas Encontradas)
+            const camWrapper = document.getElementById('camara-wrapper');
+            const videoVivoTab = document.getElementById('video-vivo');
+            const fallasSlot = document.getElementById('camara-slot-fallas');
+
+            if (tabId === 'video-vivo') {
+                camWrapper.style.display = 'block';
+                videoVivoTab.appendChild(camWrapper);
+            } else if (tabId === 'fallas-encontradas') {
+                camWrapper.style.display = 'block';
+                fallasSlot.appendChild(camWrapper);
+            } else {
+                camWrapper.style.display = 'none';
+            }
         }
 
         document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
@@ -241,7 +300,15 @@
                     alert('Error al conectar.');
                 }
             }
+
+            
         });
+
+        // Al cargar la página, mover la cámara a la pestaña activa por defecto (Video en Vivo)
+document.addEventListener('DOMContentLoaded', function() {
+    const camWrapper = document.getElementById('camara-wrapper');
+    document.getElementById('video-vivo').appendChild(camWrapper);
+});
     </script>
 </body>
 </html>
