@@ -121,7 +121,7 @@
         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
             <h4>Subir Nuevo Video</h4>
             <form id="form-subir-video">
-                <input type="text" id="video-titulo" placeholder="Titulo del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                
                 <input type="url" id="video-url" placeholder="URL de YouTube" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
                 <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
             </form>
@@ -271,7 +271,7 @@ async function congelarYAnalizarFalla() {
 
         document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const titulo = document.getElementById('video-titulo').value;
+           
             const url_video = document.getElementById('video-url').value;
             try {
                 const response = await fetch('/api/subir_video', {
