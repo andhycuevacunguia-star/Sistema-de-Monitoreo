@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Monitoreo - Mano Robótica</title>
+    <title>Sistema de Monitoreo - Mano Robotica</title>
     <style>
         :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --success: #22c55e; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
         body { font-family: sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
@@ -26,7 +26,7 @@
             <h2 style="margin:0;">Sistema de Monitoreo</h2>
             <p style="margin: 5px 0 0 0; color: var(--text-muted);">Usuario: <strong>{{ usuario }}</strong> | Rol: <strong>{{ rol }}</strong></p>
         </div>
-        <a href="/logout" style="color:var(--danger); font-weight: bold; text-decoration: none;">Cerrar Sesión</a>
+        <a href="/logout" style="color:var(--danger); font-weight: bold; text-decoration: none;">Cerrar Sesion</a>
     </div>
 
     <!-- Pestañas de Navegación -->
@@ -59,17 +59,17 @@
                 <div class="sensor-card"><strong>{{ s.sensor_nombre }}</strong>: {{ s.valor }} <span style="float: right; color: var(--text-muted); font-size: 13px;">{{ s.created_at }}</span></div>
             {% endfor %}
         {% else %}
-            <p style="color: var(--text-muted);">No hay registros de sensores aún.</p>
+            <p style="color: var(--text-muted);">No hay registros de sensores aun.</p>
         {% endif %}
     </div>
 
    <!-- 3. Pestaña Fallas Encontradas -->
     <div id="fallas-encontradas" class="tab-content">
-        <h3>Detección Inteligente de Fallas (Captura de Imagen)</h3>
+        <h3>Deteccion de Fallas en Componente</h3>
         
         <div style="text-align: center; margin: 20px 0;">
            <button id="btn-escanear" onclick="congelarYAnalizarFalla()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px;">
-                📸 Congelar y Escanear Componente
+                Escanear Componente
            </button>
         </div>
 
@@ -79,13 +79,13 @@
             <p id="desc-estado" style="margin:5px 0 0 0; font-size: 13px;"></p>
         </div>
 
-        <h3 style="margin-top: 30px;">Historial de Fallas Registradas (Base de Datos)</h3>
+        <h3 style="margin-top: 30px;">Historial de Fallas Registradas</h3>
         <table>
             <thead>
                 <tr>
                     <th>Fecha / Hora</th>
                     <th>Componente</th>
-                    <th>Descripción</th>
+                    <th>Descripcion</th>
                     <th>Estado</th>
                 </tr>
             </thead>
@@ -97,7 +97,7 @@
                         <td>{{ f.componente }}</td>
                         <td>{{ f.descripcion }}</td>
                         <td>
-                            {% if 'ARRUGADO' in f.estado %}
+                            {% if f.estado == 'Arrugado' %}
                                 <span style="color: var(--danger); font-weight: bold;">{{ f.estado }}</span>
                             {% else %}
                                 <span style="color: var(--success); font-weight: bold;">{{ f.estado }}</span>
@@ -119,8 +119,8 @@
         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
             <h4>Subir Nuevo Video</h4>
             <form id="form-subir-video">
-                <input type="text" id="video-titulo" placeholder="Título del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
-                <input type="url" id="video-url" placeholder="URL de YouTube (ej: https://www.youtube.com/watch?v=...)" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="text" id="video-titulo" placeholder="Titulo del video" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
+                <input type="url" id="video-url" placeholder="URL de YouTube" required style="width: 100%; padding: 8px; margin-bottom: 10px; background: var(--bg-main); color: white; border: 1px solid var(--border); border-radius: 6px;">
                 <button type="submit" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Subir Video</button>
             </form>
         </div>
@@ -148,7 +148,7 @@
     <!-- 5. Pestaña Gestionar Usuarios -->
     {% if rol == 'admin' %}
     <div id="gestionar-usuarios" class="tab-content">
-        <h3>Gestión de Usuarios Registrados</h3>
+        <h3>Gestion de Usuarios Registrados</h3>
         <table>
             <thead>
                 <tr>
@@ -156,7 +156,7 @@
                     <th>Usuario</th>
                     <th>Rol</th>
                     <th>Fecha Registro</th>
-                    <th>Acción</th>
+                    <th>Accion</th>
                 </tr>
             </thead>
             <tbody>
@@ -195,14 +195,9 @@
             const cont = document.getElementById('resultado-diagnostico');
             const tit = document.getElementById('titulo-estado');
             const desc = document.getElementById('desc-estado');
-            const iframe = document.getElementById('iframe-esp32');
             
-            btn.textContent = "🔍 Analizando componente con IA...";
+            btn.textContent = "Analizando componente...";
             btn.disabled = true;
-
-            // Congelar la transmisión de la cámara de forma visual
-            const iframeSrc = iframe.src;
-            iframe.src = "about:blank"; // Detiene la transmisión momentáneamente congelando el marco actual
 
             try {
                 const response = await fetch('/api/detectar_fallas', {
@@ -217,22 +212,21 @@
                     cont.style.background = 'rgba(239,68,68,0.1)'; 
                     cont.style.border = '1px solid #ef4444';
                     tit.style.color = '#ef4444'; 
-                    tit.textContent = '⚠️ ¡Falla Detectada: Cartón Arrugado!';
+                    tit.textContent = 'Falla Detectada: Carton Arrugado';
                 } else {
                     cont.style.background = 'rgba(34,197,94,0.1)'; 
                     cont.style.border = '1px solid #22c55e';
                     tit.style.color = '#22c55e'; 
-                    tit.textContent = '✅ ¡Componente Normal y Aprobado!';
+                    tit.textContent = 'Componente Normal y Aprobado';
                 }
                 desc.textContent = res.descripcion;
 
-                setTimeout(() => { location.reload(); }, 3500);
+                setTimeout(() => { location.reload(); }, 2500);
 
             } catch (e) {
                 alert("Error al procesar la captura en el servidor.");
-                iframe.src = iframeSrc;
             } finally {
-                btn.textContent = "📸 Congelar y Escanear Componente";
+                btn.textContent = "Escanear Componente";
                 btn.disabled = false;
             }
         }
@@ -260,7 +254,7 @@
         document.addEventListener('click', async function(event) {
             if (event.target.classList.contains('btn-eliminar-video')) {
                 const idVideo = event.target.getAttribute('data-id');
-                if (!confirm('¿Estás seguro de eliminar este video?')) return;
+                if (!confirm('Esta seguro de eliminar este video')) return;
                 try {
                     const response = await fetch(`/eliminar_video/${idVideo}`, { method: 'DELETE' });
                     const res = await response.json();
@@ -270,7 +264,7 @@
             }
             if (event.target.classList.contains('btn-eliminar-usuario')) {
                 const idUsuario = event.target.getAttribute('data-id');
-                if (!confirm(`¿Eliminar usuario ID ${idUsuario}?`)) return;
+                if (!confirm(`Eliminar usuario ID ${idUsuario}`)) return;
                 try {
                     const response = await fetch(`/eliminar_usuario/${idUsuario}`, { method: 'DELETE' });
                     const res = await response.json();
