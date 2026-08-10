@@ -175,9 +175,8 @@ def eliminar_video(video_id):
 
 @app.route('/eliminar_usuario/<int:user_id>', methods=['DELETE', 'POST'])
 def eliminar_usuario(user_id):
-    if 'usuario' not in session or session.get('rol!=') != 'admin': # type: ignore
-        # Nota: ajusta si requieres validación estricta de admin
-        pass
+    if 'usuario' not in session or session.get('rol') != 'admin':
+        return jsonify({'success': False, 'message': 'Acceso denegado.'}), 403
 
     if session.get('user_id') == user_id:
         return jsonify({'success': False, 'message': 'No puedes eliminar tu propia cuenta en uso.'})
@@ -187,18 +186,6 @@ def eliminar_usuario(user_id):
         return jsonify({'success': True, 'message': 'Usuario eliminado correctamente.'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error al eliminar: {str(e)}'})
-
-# --- NUEVA RUTA PARA LA PRUEBA DE LOS CARTONES ---
-@app.route('/api/detectar_fallas', methods=['GET'])
-def detectar_fallas():
-    # Para probar tus cartones ahora mismo, cambia este texto manualmente en el código:
-    # Opciones validas: "normal", "rayado", "roto", "faltante"
-    estado_actual = "normal"  
-    
-    return jsonify({
-        "success": True,
-        "estado": estado_actual 
-    })
 
 @app.route('/logout')
 def logout():
