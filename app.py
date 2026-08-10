@@ -117,7 +117,7 @@ def detectar_fallas():
         "descripcion": descripcion
     })
 
-# Ruta para subir videos convirtiéndolos limpiamente a embed para que reproduzcan con miniatura
+# Ruta para subir videos convirtiéndolos limpiamente a embed para la miniatura y reproducción
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':
@@ -134,6 +134,12 @@ def subir_video():
     elif "youtu.be/" in url_video:
         video_id = url_video.split("youtu.be/")[1].split("?")[0]
         embed_url = f"https://www.youtube.com/embed/{video_id}"
+    elif "embed/" not in url_video and "youtube.com" in url_video:
+        # Por si ponen otro formato de enlace de YouTube
+        parts = url_video.split("/")
+        if len(parts) > 0:
+            video_id = parts[-1].split("?")[0]
+            embed_url = f"https://www.youtube.com/embed/{video_id}"
 
     try:
         supabase.table('Tutoriales').insert({
