@@ -4,311 +4,123 @@
     <meta charset="UTF-8">
     <title>Sistema de Monitoreo</title>
     <style>
-        :root {
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --accent: #06b6d4;
-            --danger: #ef4444;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
-        .nav-tabs { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
-        .tab-btn { background-color: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 12px 22px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s ease; }
-        .tab-btn:hover { background-color: #2e3b55; color: var(--text-main); }
-        .tab-btn.active { background-color: var(--accent); color: #fff; border-color: var(--accent); }
-        .tab-btn.admin-btn { background-color: #7c2d12; border-color: #9a3412; }
-        .tab-btn.admin-btn.active { background-color: var(--danger); border-color: var(--danger); }
+        :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
+        body { font-family: sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
+        .header { background-color: var(--bg-card); padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .tab-btn { background-color: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background-color: var(--accent); color: white; border-color: var(--accent); }
         .tab-content { display: none; background-color: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
         .tab-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background-color: #0f172a; color: var(--accent); }
-        .btn-delete { background-color: var(--danger); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-logout { color: #f87171; text-decoration: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); }
-        input[type="text"] { margin: 10px 0 20px 0; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-main); color: white; width: 100%; max-width: 400px; }
-        .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 12px; }
-        .video-card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; max-width: 650px; }
+        .sensor-card { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 10px; }
+        .video-card { background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <h2 style="margin: 0 0 5px 0; color: #fff;">Sistema de Monitoreo - Mano Robótica</h2>
-            <p style="margin: 0; color: var(--text-muted);">Usuario: <strong style="color: var(--accent);">{{ usuario }}</strong> | Rol: <strong style="color: #38bdf8;">{{ rol }}</strong></p>
+            <h2 style="margin:0;">Sistema de Monitoreo</h2>
+            <p>Usuario: <strong>{{ usuario }}</strong> | Rol: <strong>{{ rol }}</strong></p>
         </div>
-        <a href="/logout" class="btn-logout">Cerrar Sesión</a>
+        <a href="/logout" style="color:var(--danger);">Cerrar Sesión</a>
     </div>
 
-    <!-- Pestañas de Navegación -->
     <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('video-vivo', this)">Video en Vivo</button>
         <button class="tab-btn" onclick="switchTab('datos-sensores', this)">Datos de Sensores</button>
         <button class="tab-btn" onclick="switchTab('fallas-encontradas', this)">Fallas Encontradas</button>
         <button class="tab-btn" onclick="switchTab('videos-tutoriales', this)">Videos Tutoriales</button>
+    </div>
+
+    <!-- Cámara (Se moverá entre pestañas) -->
+    <div id="camara-wrapper" style="background-color: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
+        <h3>Transmisión</h3>
+        <div style="background:#000; width:400px; height:295px; border-radius:10px; overflow:hidden; margin:0 auto; border:1px solid var(--border);">
+            <iframe src="http://10.63.198.252" style="width:420px; height:320px; border:none;" scrolling="no"></iframe>
+        </div>
+    </div>
+
+    <div id="video-vivo" class="tab-content active"></div>
+
+    <div id="datos-sensores" class="tab-content">
+        <h3>Lectura de Sensores</h3>
+        {% for s in sensores %}
+            <div class="sensor-card"><strong>{{ s.sensor_nombre }}</strong>: {{ s.valor }}</div>
+        {% endfor %}
+    </div>
+
+    <div id="fallas-encontradas" class="tab-content">
+        <h3>Diagnóstico de Componentes</h3>
+        <div id="camara-slot-fallas"></div>
         
-        {% if rol == 'admin' %}
-            <button class="tab-btn admin-btn" onclick="switchTab('subir-videos', this)">Subir Videos</button>
-            <button class="tab-btn admin-btn" onclick="switchTab('eliminar-usuario', this)">Eliminar Usuario</button>
-        {% endif %}
-    </div>
-
-    <!-- CONTENEDOR GLOBAL DE LA CÁMARA (Único, para evitar errores de red en los iframes) -->
-    <div id="camara-wrapper" style="background-color: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center;">
-        <h3 style="margin-bottom: 15px;">Transmisión de Video en Vivo (ESP32-CAM)</h3>
+        <div style="margin-top: 15px; text-align: center;">
+            <button id="btn-escanear" onclick="escanearCarton()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;">
+                 Escanear Cartón
+            </button>
+        </div>
         
-        <!-- Vista principal de la cámara con marco delgado y elegante -->
-        <div style="background-color: #000; width: 400px; height: 295px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); position: relative; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-            <iframe src="http://10.63.198.252" style="position: absolute; top: -5px; left: -10px; width: 420px; height: 320px; border: none;" scrolling="no"></iframe>
-        </div>
-        <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
-            *Nota: Transmisión en tiempo real desde la red local.*
-        </p>
-    </div>
-
-    <!-- CONTENIDO DE LAS PESTAÑAS -->
-
-    <!-- 1. Video en Vivo -->
-    <div id="video-vivo" class="tab-content active">
-        <!-- El visor de la cámara se mostrará aquí por defecto -->
-    </div>
-
-    <!-- 2. Datos de Sensores -->
-    <div id="datos-sensores" class="tab-content" style="display: none;">
-        <h3>Lectura de Datos de Sensores</h3>
-        {% if sensores %}
-            {% for s in sensores %}
-            <div class="sensor-card">
-                <strong>{{ s.sensor_nombre }}</strong>: {{ s.valor }} 
-                <span style="float: right; color: #4ade80;">Estado: {{ s.estado }}</span>
-            </div>
-            {% endfor %}
-        {% else %}
-            <p style="color: var(--text-muted); font-style: italic;">Esperando conexión del Arduino / ESP32...</p>
-        {% endif %}
-    </div>
-
-    <!-- 3. Fallas Encontradas (Aquí también aparecerá la cámara y el reporte de diagnóstico) -->
-    <div id="fallas-encontradas" class="tab-content" style="display: none;">
-        <h3>Análisis y Detección de Defectos</h3>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px; justify-content: center; align-items: flex-start;">
-            
-            <!-- Contenedor donde se reubicará la cámara -->
-            <div id="camara-slot-fallas"></div>
-
-            <!-- Panel de Diagnóstico de la Tarjeta RAM -->
-            <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border); width: 320px; text-align: left;">
-                <h4 style="margin-bottom: 10px; color: var(--accent);">Diagnóstico por IA</h4>
-                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Estado actual del componente escaneado:</p>
-                
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                    <strong style="color: #10b981; display: block; margin-bottom: 4px;">✔ Estado: Componente Óptimo</strong>
-                    <span style="font-size: 13px; color: var(--text-muted);">No se detectan rayones profundos ni pistas cortadas en los circuitos impresos.</span>
-                </div>
-
-                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 12px; border-radius: 8px; display: none;" id="alerta-fallas">
-                    <strong style="color: #ef4444; display: block; margin-bottom: 4px;">⚠ ¡Atención: Raya o Rayón Detectado!</strong>
-                    <span style="font-size: 13px; color: var(--text-muted);">Se identificó una irregularidad física en la superficie del circuito.</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla original de fallas registradas -->
-        <h3 style="margin-top: 30px;">Historial de Fallas Registradas</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha / Hora</th>
-                    <th>Componente</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if fallas %}
-                    {% for f in fallas %}
-                    <tr>
-                        <td>{{ f.created_at }}</td>
-                        <td>{{ f.componente }}</td>
-                        <td>{{ f.descripcion }}</td>
-                        <td><span style="color: #facc15;">{{ f.estado }}</span></td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas recientes.</td></tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- 4. Videos Tutoriales -->
-    <div id="videos-tutoriales" class="tab-content" style="display: none;">
-        <h3>Videos Tutoriales</h3>
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            {% if videos %}
-                {% for video in videos %}
-                    <div class="video-card">
-                        <h4 style="margin: 0 0 10px 0; color: var(--accent);">{{ video.titulo }}</h4>
-                        
-                        {% if 'youtube.com' in video.ruta_video or 'youtu.be' in video.ruta_video %}
-                            {% if 'youtu.be/' in video.ruta_video %}
-                                {% set yt_id = video.ruta_video.split('youtu.be/')[1].split('?')[0] %}
-                            {% else %}
-                                {% set yt_id = video.ruta_video.split('v=')[1].split('&')[0] %}
-                            {% endif %}
-                            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
-                                <iframe src="https://www.youtube.com/embed/{{ yt_id }}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
-                            </div>
-                        {% else %}
-                            <video controls width="100%" style="border-radius: 6px; max-height: 350px;">
-                                <source src="{{ video.ruta_video }}" type="video/mp4">
-                                Tu navegador no soporta la reproducción de video.
-                            </video>
-                        {% endif %}
-
-                        {% if rol == 'admin' %}
-                            <div style="margin-top: 12px; text-align: right;">
-                                <button class="btn-delete btn-eliminar-video" data-id="{{ video.id }}">Eliminar Video</button>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p style="color: var(--text-muted); font-style: italic;">No hay videos tutoriales disponibles actualmente.</p>
-            {% endif %}
+        <div id="resultado-diagnostico" style="background:rgba(16,185,129,0.1); border:1px solid #10b981; padding:20px; border-radius:8px; margin-top:20px; display: none;">
+            <strong id="titulo-estado" style="color:#10b981;">✔ Estado: Óptimo (Normal)</strong>
+            <p id="desc-estado" style="margin:5px 0 0 0; color:var(--text-muted);">El cartón no presenta rayones, roturas ni faltantes.</p>
         </div>
     </div>
 
-    {% if rol == 'admin' %}
-    <!-- 5. Subir Videos -->
-    <div id="subir-videos" class="tab-content" style="display: none;">
-        <h3>Subir Videos Tutoriales</h3>
-        <form id="form-subir-video">
-            <label>Título del Video:</label><br>
-            <input type="text" id="video-titulo" placeholder="Ej: Configuración inicial" required><br>
-            
-            <label>Enlace del Video (URL de YouTube o MP4):</label><br>
-            <input type="text" id="video-url" placeholder="https://youtu.be/..." required><br><br>
-            
-            <button type="submit" style="background-color: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Registrar Video</button>
-        </form>
+    <div id="videos-tutoriales" class="tab-content">
+        <h3>Tutoriales</h3>
+        {% for video in videos %}
+            <div class="video-card"><h4>{{ video.titulo }}</h4></div>
+        {% endfor %}
     </div>
-
-    <!-- 6. Eliminar Usuario -->
-    <div id="eliminar-usuario" class="tab-content" style="display: none;">
-        <h3>Gestión de Usuarios</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th><th>Usuario</th><th>Rol</th><th>Registro</th><th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in usuarios %}
-                <tr>
-                    <td>{{ u.id }}</td>
-                    <td><strong>{{ u.usuario }}</strong></td>
-                    <td>{{ u.rol }}</td>
-                    <td>{{ u.created_at }}</td>
-                    <td><button class="btn-delete btn-eliminar-usuario" data-id="{{ u.id }}">Eliminar</button></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
 
     <script>
         function switchTab(tabId, btnElement) {
-            // 1. Ocultar todos los contenidos de pestañas
-            const contents = document.querySelectorAll('.tab-content');
-            contents.forEach(content => content.style.display = 'none');
-
-            // 2. Quitar la clase active a todos los botones
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-
-            // 3. Mostrar la pestaña seleccionada y activar su botón
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).style.display = 'block';
             btnElement.classList.add('active');
 
-            // 4. GESTIÓN INTELIGENTE DE LA CÁMARA (Solo visible en Video en Vivo y Fallas Encontradas)
-            const camWrapper = document.getElementById('camara-wrapper');
-            const videoVivoTab = document.getElementById('video-vivo');
-            const fallasSlot = document.getElementById('camara-slot-fallas');
+            const cam = document.getElementById('camara-wrapper');
+            if (tabId === 'video-vivo') document.getElementById('video-vivo').appendChild(cam);
+            else if (tabId === 'fallas-encontradas') document.getElementById('camara-slot-fallas').appendChild(cam);
+            else cam.style.display = 'none';
+            if (tabId === 'video-vivo' || tabId === 'fallas-encontradas') cam.style.display = 'block';
+        }
 
-            if (tabId === 'video-vivo') {
-                camWrapper.style.display = 'block';
-                videoVivoTab.appendChild(camWrapper);
-            } else if (tabId === 'fallas-encontradas') {
-                camWrapper.style.display = 'block';
-                fallasSlot.appendChild(camWrapper);
-            } else {
-                camWrapper.style.display = 'none';
+        async function escanearCarton() {
+            const btn = document.getElementById('btn-escanear');
+            const cont = document.getElementById('resultado-diagnostico');
+            const tit = document.getElementById('titulo-estado');
+            const desc = document.getElementById('desc-estado');
+
+            btn.textContent = "Analizando...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/detectar_fallas');
+                const data = await response.json();
+                cont.style.display = 'block';
+
+                if (data.estado === 'normal') {
+                    cont.style.background = 'rgba(16,185,129,0.1)'; cont.style.border = '1px solid #10b981';
+                    tit.style.color = '#10b981'; tit.textContent = '✔ Estado: Normal (Bien)';
+                    desc.textContent = 'El cartón está en condiciones óptimas.';
+                } else {
+                    cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
+                    tit.style.color = '#ef4444';
+                    if (data.estado === 'rayado') { tit.textContent = '⚠ ¡Falla: Rayón!'; desc.textContent = 'Se identificó un rayón superficial.'; }
+                    else if (data.estado === 'roto') { tit.textContent = '⚠ ¡Falla: Roto!'; desc.textContent = 'Se detectó una ruptura.'; }
+                    else if (data.estado === 'faltante') { tit.textContent = '⚠ ¡Falla: Falta parte!'; desc.textContent = 'El cartón está incompleto.'; }
+                }
+            } catch (e) {
+                alert("Error al conectar con el servidor.");
+            } finally {
+                btn.textContent = "Escanear Cartón";
+                btn.disabled = false;
             }
         }
 
-        document.getElementById('form-subir-video')?.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const titulo = document.getElementById('video-titulo').value;
-            const url_video = document.getElementById('video-url').value;
-
-            try {
-                const response = await fetch('/api/subir_video', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, url_video })
-                });
-                const res = await response.json();
-                alert(res.message);
-                if (res.success) location.reload();
-            } catch (error) {
-                alert('Error al conectar con el servidor.');
-            }
-        });
-
-        // Eliminar video
-        document.addEventListener('click', async function(event) {
-            if (event.target.classList.contains('btn-eliminar-video')) {
-                const idVideo = event.target.getAttribute('data-id');
-                if (!confirm('¿Estás seguro de eliminar este video?')) return;
-
-                try {
-                    const response = await fetch(`/eliminar_video/${idVideo}`, { method: 'DELETE' });
-                    const res = await response.json();
-                    alert(res.message);
-                    if (res.success) location.reload();
-                } catch (error) {
-                    alert('Error al conectar con el servidor.');
-                }
-            }
-
-            // Eliminar usuario
-            if (event.target.classList.contains('btn-eliminar-usuario')) {
-                const idUsuario = event.target.getAttribute('data-id');
-                if (!confirm(`¿Eliminar usuario ID ${idUsuario}?`)) return;
-
-                try {
-                    const response = await fetch(`/eliminar_usuario/${idUsuario}`, { method: 'DELETE' });
-                    const res = await response.json();
-                    alert(res.message);
-                    if (res.success) location.reload();
-                } catch (error) {
-                    alert('Error al conectar.');
-                }
-            }
-
-            
-        });
-
-        // Al cargar la página, mover la cámara a la pestaña activa por defecto (Video en Vivo)
-document.addEventListener('DOMContentLoaded', function() {
-    const camWrapper = document.getElementById('camara-wrapper');
-    document.getElementById('video-vivo').appendChild(camWrapper);
-});
+        document.addEventListener('DOMContentLoaded', () => document.getElementById('video-vivo').appendChild(document.getElementById('camara-wrapper')));
     </script>
 </body>
 </html>
