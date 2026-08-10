@@ -117,7 +117,7 @@ def detectar_fallas():
         "descripcion": descripcion
     })
 
-# Ruta para subir videos con conversión correcta a formato embed para que cargue la miniatura y reproductor
+# Ruta para subir videos convirtiéndolos limpiamente a embed para que reproduzcan con miniatura
 @app.route('/api/subir_video', methods=['POST'])
 def subir_video():
     if session.get('rol') != 'admin':
@@ -127,7 +127,6 @@ def subir_video():
     titulo = data.get('titulo')
     url_video = data.get('url_video', '')
     
-    # Procesar la URL de YouTube para convertirla de forma limpia a embed
     embed_url = url_video
     if "watch?v=" in url_video:
         video_id = url_video.split("watch?v=")[1].split("&")[0]

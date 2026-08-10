@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Monitoreo - Mano Robótica</title>
+    <title>Sistema de Monitoreo </title>
     <style>
         :root { --bg-main: #0f172a; --bg-card: #1e293b; --accent: #06b6d4; --danger: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
         body { font-family: sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 25px; }
@@ -80,8 +80,8 @@
         
         <div style="text-align: center; margin: 20px 0;">
            <button id="btn-escanear" onclick="congelarYAnalizarFalla()" style="background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px;">
-                 Congelar y Escanear Componente
-            </button>
+                Congelar y Escanear Componente
+           </button>
         </div>
 
         <!-- Resultado del Análisis -->
@@ -91,33 +91,6 @@
         </div>
 
         <h3 style="margin-top: 30px;">Historial de Fallas Registradas (Base de Datos)</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha / Hora</th>
-                    <th>Componente</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if fallas %}
-                    {% for f in fallas %}
-                    <tr>
-                        <td>{{ f.created_at }}</td>
-                        <td>{{ f.componente }}</td>
-                        <td>{{ f.descripcion }}</td>
-                        <td><span style="color: #ef4444;">{{ f.estado }}</span></td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No hay fallas registradas.</td></tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
-
-        <h3 style="margin-top: 30px;">Historial de Fallas Registradas</h3>
         <table>
             <thead>
                 <tr>
@@ -223,7 +196,6 @@
                 document.getElementById('video-vivo').appendChild(cam);
             } else if (tabId === 'fallas-encontradas') {
                 cam.style.display = 'block';
-                // Movemos el iframe al slot de la pestaña de fallas
                 document.getElementById('slot-iframe-camara').appendChild(cam);
                 document.getElementById('slot-iframe-camara').style.display = 'block';
                 document.getElementById('slot-foto-congelada').style.display = 'none';
@@ -245,15 +217,12 @@
             btn.textContent = "Congelando imagen y analizando...";
             btn.disabled = true;
 
-            // 1. Congelamos la vista ocultando el stream en vivo y mostrando el aviso de captura
             slotIframe.style.display = 'none';
             slotFoto.style.display = 'flex';
 
             try {
-                // Simulamos el procesamiento de la imagen capturada (aquí puedes validar si hubo cartón arrugado o roto)
-                // Enviaremos una petición a tu backend para registrar el resultado en Supabase
                 const respuestaSimulada = {
-                    estado: "arrugado", // Cambiará según lo que detecte tu lógica de prueba
+                    estado: "arrugado",
                     descripcion: "Se detectaron arrugas e irregularidades superficiales en el cartón analizado."
                 };
 
@@ -270,7 +239,6 @@
                 tit.textContent = '⚠ ¡Falla Detectada: Cartón Arrugado!';
                 desc.textContent = respuestaSimulada.descripcion;
 
-                // Recargamos la página después de 2.5 segundos para reflejar el registro guardado en la base de datos abajo
                 setTimeout(() => { location.reload(); }, 2500);
 
             } catch (e) {
@@ -279,45 +247,6 @@
                 slotFoto.style.display = 'none';
             } finally {
                 btn.textContent = "📸 Congelar y Escanear Componente";
-                btn.disabled = false;
-            }
-        }
-
-        // Lógica del botón de escaneo mediante la cámara
-        async function escanearFallasCamara() {
-            const btn = document.getElementById('btn-escanear');
-            const cont = document.getElementById('resultado-diagnostico');
-            const tit = document.getElementById('titulo-estado');
-            const desc = document.getElementById('desc-estado');
-
-            btn.textContent = "Analizando imagen de la cámara...";
-            btn.disabled = true;
-
-            try {
-                const response = await fetch('/api/analizar_camara', { method: 'POST' });
-                const data = await response.json();
-                
-                cont.style.display = 'block';
-
-                if (data.estado === 'normal') {
-                    cont.style.background = 'rgba(16,185,129,0.1)'; cont.style.border = '1px solid #10b981';
-                    tit.style.color = '#10b981'; tit.textContent = '✔ Estado: Óptimo (Sin Fallas)';
-                    desc.textContent = 'El componente / cartón se encuentra en condiciones correctas.';
-                } else if (data.estado === 'vacio') {
-                    cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
-                    tit.style.color = '#ef4444'; tit.textContent = '❌ Alerta: Coloque un componente';
-                    desc.textContent = 'No se detecta ningún cartón o componente frente a la cámara.';
-                } else {
-                    cont.style.background = 'rgba(239,68,68,0.1)'; cont.style.border = '1px solid #ef4444';
-                    tit.style.color = '#ef4444'; tit.textContent = '⚠ ¡Falla Detectada en el Cartón!';
-                    desc.textContent = data.descripcion || 'Se detectaron arrugas, roturas o irregularidades.';
-                    
-                    setTimeout(() => { location.reload(); }, 2000);
-                }
-            } catch (e) {
-                alert("Error al conectar con el sistema de visión.");
-            } finally {
-                btn.textContent = " Escanear Componente con Cámara";
                 btn.disabled = false;
             }
         }
